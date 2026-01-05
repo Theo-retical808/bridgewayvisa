@@ -11,137 +11,100 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Favicon -->
-  <link rel="icon" href="logo.png" type="image/png">
-
-  <!-- SEO Meta -->
-  <meta name="description" content="Bridgeway Visa Travel Corporation helps you study, work, and migrate abroad. Visa assistance, international programs, global partners – your future starts here.">
-  <meta name="keywords" content="Bridgeway Visa, BVTC, study abroad, work abroad, migrate, visa assistance, Canada visa, Australia visa, New Zealand residency, skilled migration">
-  <meta name="author" content="Bridgeway Visa Travel Corporation">
-
-  <!-- Open Graph (Facebook, Messenger, etc.) -->
-  <meta property="og:title" content="Bridgeway Visa Travel Corporation | BVTC">
-  <meta property="og:description" content="Your path to global education and career opportunities. Bridgeway helps you study, work, and live abroad.">
-  <meta property="og:image" content="https://www.bridgewayvisa.com/logo.png">
-  <meta property="og:url" content="https://www.bridgewayvisa.com">
-  <meta property="og:type" content="website">
-
-  <!-- Structured Data for Google -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Bridgeway Visa Travel Corporation",
-    "url": "https://www.bridgewayvisa.com",
-    "logo": "https://www.bridgewayvisa.com/logo.png",
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+63-967-214-0260",
-      "contactType": "Customer Service",
-      "areaServed": "PH",
-      "availableLanguage": "English"
-    }
-  }
-  </script>
-
 </head>
 
 <body>
     <!-- Navigation -->
-    <!-- Navigation -->
     <nav class="fixed w-full z-50 bg-black shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Logo and Name -->
-                <div class="flex items-center flex-shrink-0">
-                    <img src="logo.jpg" alt="BVTC Logo" class="w-10 h-10 rounded-full object-cover" />
-                    <span class="ml-2 font-bold text-white text-sm sm:text-base md:text-lg lg:text-xl leading-tight">
-                        <span class="block md:hidden">Bridgeway Visa Travel Corporation</span>
-                        <span class="hidden md:block">Bridgeway Visa Travel Corporation</span>
+
+                <!-- Logo + Name -->
+                <div class="flex items-center gap-3 min-w-0">
+                    <img src="logo.jpg" alt="BVTC Logo" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+
+                    <!-- Responsive Company Name -->
+                    <span class="font-bold text-white leading-tight truncate 
+                    text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl">
+                        Bridgeway Visa Travel Corporation
                     </span>
                 </div>
 
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex space-x-4">
-                    <a href="#office"
-                        class="text-white hover:text-red-600 px-3 py-2 text-sm lg:text-base font-medium transition duration-300">Office</a>
-                    <a href="#services"
-                        class="text-white hover:text-red-600 px-3 py-2 text-sm lg:text-base font-medium transition duration-300">Services</a>
-                    <a href="#about"
-                        class="text-white hover:text-red-600 px-3 py-2 text-sm lg:text-base font-medium transition duration-300">About
-                        Us</a>
-                    <a href="#partners"
-                        class="text-white hover:text-red-600 px-3 py-2 text-sm lg:text-base font-medium transition duration-300">Partners</a>
-                    <a href="#contact"
-                        class="text-white hover:text-red-600 px-3 py-2 text-sm lg:text-base font-medium transition duration-300">Contact</a>
+                    <a href="#office" class="nav-link">Office</a>
+                    <a href="#services" class="nav-link">Services</a>
+                    <a href="#consultants" class="nav-link">Visa Consultants</a>
+                    <a href="#about" class="nav-link">About Us</a>
+                    <a href="#partners" class="nav-link">Partners</a>
+                    <a href="#contact" class="nav-link">Contact</a>
                 </div>
 
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden">
                     <button id="mobile-menu-button" class="text-white focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
+                                d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
                 </div>
+
             </div>
         </div>
 
         <!-- Mobile Navigation Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-gray-800 px-4 pt-3 pb-4 space-y-1">
-            <a href="#office"
-                class="block text-white hover:text-red-600 px-3 py-2 rounded-md text-base font-medium">Office</a>
-            <a href="#services"
-                class="block text-white hover:text-red-600 px-3 py-2 rounded-md text-base font-medium">Services</a>
-            <a href="#about"
-                class="block text-white hover:text-red-600 px-3 py-2 rounded-md text-base font-medium">About Us</a>
-            <a href="#partners"
-                class="block text-white hover:text-red-600 px-3 py-2 rounded-md text-base font-medium">Partners</a>
-            <a href="#contact"
-                class="block text-white hover:text-red-600 px-3 py-2 rounded-md text-base font-medium">Contact</a>
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-800 px-4 pt-3 pb-4 flex flex-col space-y-2">
+            <a href="#office" class="mobile-link block">Office</a>
+            <a href="#services" class="mobile-link block">Services</a>
+            <a href="#consultants" class="mobile-link block">Visa Consultants</a>
+            <a href="#about" class="mobile-link block">About Us</a>
+            <a href="#partners" class="mobile-link block">Partners</a>
+            <a href="#contact" class="mobile-link block">Contact</a>
         </div>
+
     </nav>
 
-    <script>
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
+    <!-- Reusable Classes -->
+    <style>
+        .nav-link {
+            @apply text-white hover:text-red-600 px-3 py-2 text-sm lg:text-base font-medium transition duration-300;
+        }
 
-        mobileMenuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-    </script>
-
-    <!-- Working Toggle Script -->
-    <script>
-        document.getElementById('mobile-menu-button').addEventListener('click', function () {
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenu.classList.toggle('hidden');
-        });
-    </script>
-
-
+        .mobile-link {
+            @apply block text-white hover:text-red-600 px-3 py-2 rounded-md text-base font-medium;
+        }
+    </style>
 
     <!-- Office Section -->
     <section id="office" class="pt-24 pb-32 bg-[#000000] animate-fade-in">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-white text-center mb-12">Our Office</h2>
+
+            <h2 class="text-3xl md:text-4xl font-bold text-red-700 text-center mb-10 tracking-wide">
+                Our Office
+            </h2>
+
             <div class="flex flex-col md:flex-row items-center gap-12">
 
                 <!-- Office Collage -->
                 <div class="md:w-1/2 flex justify-center">
                     <div class="grid grid-cols-2 gap-4 w-full max-w-md">
-                        <!-- Portrait Image 1 -->
-                        <img src="ourOffice/theOffice.jpg" alt="Office Portrait 1"
-                            class="w-full h-48 object-cover rounded-lg shadow-md col-span-1 row-span-1">
-                        <!-- Portrait Image 2 -->
-                        <img src="ourOffice/lobbyOfOffice.jpg" alt="Office Portrait 2"
-                            class="w-full h-48 object-cover rounded-lg shadow-md col-span-1 row-span-1">
-                        <!-- Landscape Image (Outside of the Office) -->
+
+                        <!-- Outside Image (Now on Top) -->
                         <img src="ourOffice/outsideOfTheOffice.jpg" alt="Outside of the Office"
                             class="w-full h-40 object-cover rounded-lg shadow-md col-span-2">
+
+                        <!-- Portrait Image 1 -->
+                        <img src="ourOffice/theOffice.jpg" alt="Office Portrait 1"
+                            class="w-full h-48 object-cover rounded-lg shadow-md col-span-1">
+
+                        <!-- Portrait Image 2 -->
+                        <img src="ourOffice/lobbyOfOffice.jpg" alt="Office Portrait 2"
+                            class="w-full h-48 object-cover rounded-lg shadow-md col-span-1">
+
                     </div>
                 </div>
+
 
                 <!-- Office Content -->
                 <div class="md:w-1/2">
@@ -151,18 +114,37 @@
                         The space is well-organized, with a clean and modern layout that puts clients at ease the moment
                         they walk in.
                     </p>
+
                     <p class="text-white mb-4">
                         Staff are approachable and attentive, creating a warm and efficient environment perfect for
                         travel consultations and visa processing.
                     </p>
+
                     <a href="#contact"
                         class="inline-block mt-4 text-[#DC143C] border border-[#DC143C] px-5 py-2 rounded-md hover:bg-[#DC143C] hover:text-white transition duration-300">
                         Contact Us
                     </a>
                 </div>
 
-
             </div>
+
+            <!-- ⭐ Office Location Video Section (Matching Button Style) -->
+            <div class="mt-20 text-center">
+                <h3 class="text-2xl text-white font-semibold mb-4">
+                    See Where Our Office Is Located
+                </h3>
+
+                <p class="text-gray-300 text-lg mb-10">
+                    Watch this short video to see exactly where our office is located.
+                </p>
+
+                <a href="https://drive.google.com/file/d/108L-syeYM57UT68X2WW9HdIduRO8Xid1/view?usp=sharing"
+                    target="_blank"
+                    class="inline-block px-6 py-3 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 transition">
+                    ▶ Watch Location Video
+                </a>
+            </div>
+
         </div>
     </section>
 
@@ -172,7 +154,7 @@
         <!-- Services content -->
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-3xl md:text-4xl font-bold text-red-700 text-center mb-10 tracking-wide">
-                SERVICES WE OFFER
+                Services We Offer
             </h2>
 
             <div id="services-accordion" class="space-y-4">
@@ -238,11 +220,9 @@
                         data-content="dependent">
                         <div class="px-6 pb-5 pt-2">
                             <p>
-                                This visa allows dependents of Temporary Residents (Students), Legal Residents, or
-                                Citizens to enter
-                                and reside in a country. The sponsoring resident is responsible for initiating and
-                                managing the visa
-                                application process.
+                                This visa allows dependents of legal residents or citizens to enter and remain in a
+                                country. The sponsor (resident) is responsible for initiating and managing the
+                                application.
                             </p>
                         </div>
                     </div>
@@ -321,7 +301,10 @@
 
             <!-- Featured Programs Section -->
             <div class="mt-16 relative">
-                <h3 class="text-2xl font-bold text-red-800 mb-8 text-center">Featured Programs</h3>
+                <!-- <h3 class="text-2xl font-bold text-red-800 mb-8 text-center">Featured Programs</h3> -->
+                <h2 class="text-3xl md:text-4xl font-bold text-red-700 text-center mb-10 tracking-wide">
+                    Featured Programs
+                </h2>
 
                 <!-- Scroll Buttons -->
                 <button id="scrollLeft"
@@ -341,7 +324,7 @@
 
                     <!-- Card 1 -->
                     <div class="bg-black rounded-lg shadow-lg overflow-hidden flex flex-col w-[300px] flex-shrink-0">
-                        <div class="w-full h-64 mb-6">
+                        <div class="w-full h-80 mb-6">
                             <img src="featuredPrograms/continuingCareAssisstant.jpg"
                                 alt="Continuing Care Assistant Program"
                                 class="w-full h-full object-cover rounded-lg shadow-md transform transition duration-300 hover:scale-105" />
@@ -357,14 +340,14 @@
 
                     <!-- Card 2 -->
                     <div class="bg-black rounded-lg shadow-lg overflow-hidden flex flex-col w-[300px] flex-shrink-0">
-                        <div class="w-full h-64 mb-6">
-                            <img src="featuredPrograms/studentVisaInCanada.jpg" alt="Student Visa in Canada"
+                        <div class="w-full h-80 mb-6">
+                            <img src="featuredPrograms/studyInGermany.jpg" alt="Student Visa in Canada"
                                 class="w-full h-full object-cover rounded-lg shadow-md transform transition duration-300 hover:scale-105" />
                         </div>
                         <div class="p-6 flex flex-col flex-1">
-                            <h4 class="font-semibold text-lg text-red-700 mb-2">Student Visa in Canada</h4>
-                            <p class="text-white mb-4 flex-1">Experience world-class education and vibrant multicultural
-                                life in Canada.</p>
+                            <h4 class="font-semibold text-lg text-red-700 mb-2">Free Tuition Fee Program in Germany</h4>
+                            <p class="text-white mb-4 flex-1">Gives you a chance to study + work in Germany without
+                                paying for Tuition Fee</p>
                             <a href="https://www.facebook.com/messages/t/61570211881355" target="_blank"
                                 class="btn-primary text-center py-2 px-4 rounded-md font-medium mt-auto">Message us</a>
                         </div>
@@ -372,7 +355,7 @@
 
                     <!-- Card 3 -->
                     <div class="bg-black rounded-lg shadow-lg overflow-hidden flex flex-col w-[300px] flex-shrink-0">
-                        <div class="w-full h-64 mb-6">
+                        <div class="w-full h-80 mb-6">
                             <img src="featuredPrograms/studyInAustrillia.jpg" alt="Study in Australia"
                                 class="w-full h-full object-cover rounded-lg shadow-md transform transition duration-300 hover:scale-105" />
                         </div>
@@ -386,7 +369,7 @@
 
                     <!-- Card 4 -->
                     <div class="bg-black rounded-lg shadow-lg overflow-hidden flex flex-col w-[300px] flex-shrink-0">
-                        <div class="w-full h-64 mb-6">
+                        <div class="w-full h-80 mb-6">
                             <img src="featuredPrograms/longtermResidencyPathwayNewZealand.jpg"
                                 alt="Residency Pathway in New Zealand"
                                 class="w-full h-full object-cover rounded-lg shadow-md transform transition duration-300 hover:scale-105" />
@@ -402,7 +385,7 @@
 
                     <!-- Card 5 -->
                     <div class="bg-black rounded-lg shadow-lg overflow-hidden flex flex-col w-[300px] flex-shrink-0">
-                        <div class="w-full h-64 mb-6">
+                        <div class="w-full h-80 mb-6">
                             <img src="featuredPrograms/TravelToSpain.jpg" alt="Travel to Spain"
                                 class="w-full h-full object-cover rounded-lg shadow-md transform transition duration-300 hover:scale-105" />
                         </div>
@@ -417,7 +400,7 @@
 
                     <!-- Card 6 -->
                     <div class="bg-black rounded-lg shadow-lg overflow-hidden flex flex-col w-[300px] flex-shrink-0">
-                        <div class="w-full h-64 mb-6">
+                        <div class="w-full h-80 mb-6">
                             <img src="featuredPrograms/generalSkillMigrantVisa.jpg" alt="General Skilled Migrant Visa"
                                 class="w-full h-full object-cover rounded-lg shadow-md transform transition duration-300 hover:scale-105" />
                         </div>
@@ -432,7 +415,7 @@
 
                     <!-- Card 7 -->
                     <div class="bg-black rounded-lg shadow-lg overflow-hidden flex flex-col w-[300px] flex-shrink-0">
-                        <div class="w-full h-64 mb-6">
+                        <div class="w-full h-80 mb-6">
                             <img src="featuredPrograms/StudyInUnitedKingdom.jpg" alt="Study in the United Kingdom"
                                 class="w-full h-full object-cover rounded-lg shadow-md transform transition duration-300 hover:scale-105" />
                         </div>
@@ -447,7 +430,7 @@
 
                     <!-- Card 8 -->
                     <div class="bg-black rounded-lg shadow-lg overflow-hidden flex flex-col w-[300px] flex-shrink-0">
-                        <div class="w-full h-64 mb-6">
+                        <div class="w-full h-80 mb-6">
                             <img src="featuredPrograms/studyAbroad.jpg" alt="Study Abroad Program"
                                 class="w-full h-full object-cover rounded-lg shadow-md transform transition duration-300 hover:scale-105" />
                         </div>
@@ -501,11 +484,63 @@
         </div>
     </section>
 
+    <!-- Visa Consultants Section -->
+    <section id="consultants" class="bg-black py-20">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+
+            <!-- Section Title -->
+            <h2 class="text-4xl font-bold text-red-600 mb-6">
+                Visa Consultants
+            </h2>
+
+            <!-- Section Description -->
+            <p class="text-gray-300 text-lg mb-10">
+                Our expert visa consultants are here to guide you through every step of your application process.
+            </p>
+
+            <!-- Watch Video Button -->
+            <div class="mt-6">
+                <a href="https://drive.google.com/file/d/1qSjNjaToiIcESgqS43oeK7GY2nlyjlFC/view" target="_blank"
+                    class="inline-block px-6 py-3 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 transition">
+                    ▶ Watch Video
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+
+
+    <script>
+        const video = document.getElementById('consultantVideo');
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        video.play();  // play when section is visible
+                    } else {
+                        video.pause(); // pause when out of view
+                    }
+                });
+            },
+            { threshold: 0.5 } // 50% of video must be visible
+        );
+
+        observer.observe(video);
+    </script>
+
+
+
     <!-- About Section -->
     <section id="about" class="py-20 bg-white-100">
         <!-- About content -->
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="section-title">About Us</h2>
+            <!-- <h2 class="section-title">About Us</h2> -->
+            <h2 class="text-3xl md:text-4xl font-bold text-red-700 text-center mb-10 tracking-wide">
+                About Us
+            </h2>
+
             <div class="flex flex-col md:flex-row items-start gap-12">
                 <!-- Left: Image -->
                 <div class="md:w-1/2 mb-10 md:mb-0 flex justify-center">
@@ -530,7 +565,7 @@
                         <li>✅ <strong>Flexible & Affordable Programs</strong> – Designed for your goals & budget</li>
                     </ul>
 
-                    <p class="mt-4 font-semibold">🎓 Why with Bridgeway?</p>
+                    <p class="mt-4 font-semibold">🎓 Why Bridgeway?</p>
                     <ul class="list-none space-y-1">
                         <li>✔️ Earn while studying</li>
                         <li>✔️ Boost your credentials</li>
@@ -671,7 +706,10 @@
     <section id="partners" class="py-20">
         <!-- Partners content -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <h2 class="text-3xl font-bold text-red-800 text-center mb-6">Our Partners</h2>
+            <!-- <h2 class="text-3xl font-bold text-red-800 text-center mb-6">Our Partners</h2> -->
+            <h2 class="text-3xl md:text-4xl font-bold text-red-700 text-center mb-10 tracking-wide">
+                Our Partners
+            </h2>
             <div class="text-center mb-12">
                 <p class="text-xl text-gray-300 max-w-2xl mx-auto">
                     We are proud to collaborate with leading organizations and clients worldwide.
@@ -735,7 +773,7 @@
                     </div>
                 </div>
 
-                <!-- Gogozing Immigration -->
+                <!-- Goozing Immigration -->
                 <div
                     class="bg-black p-8 rounded-xl shadow-lg border border-white w-full max-w-sm h-full flex flex-col justify-between transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:border-red-300">
                     <div>
@@ -744,17 +782,18 @@
                             <img src="ourPartners/GoozingMigration.jpg" alt="Goozing Migration Logo"
                                 class="object-contain w-full h-full" />
                         </div>
-                        <h4 class="text-lg font-bold text-white mb-1">Gogozing Migration</h4>
+                        <h4 class="text-lg font-bold text-white mb-1">Goozing Immigration</h4>
                         <p class="text-gray-300 text-sm italic mb-2">Personalized and practical visa assistance</p>
                         <ul class="text-left text-gray-300 text-sm list-disc list-inside space-y-1">
                             <li>🌟 Tailored Visa Assistance for student, skilled worker, and partner visas</li>
+                            <li>🌟 Education Partnerships with accredited institutions</li>
                             <li>🌟 Responsive Support with one-on-one consultations</li>
                             <li>🌟 Migration Expertise with updated policy knowledge</li>
                         </ul>
                     </div>
                     <div class="mt-auto pt-4">
                         <p class="text-gray-400 italic">
-                            Gogozing migration makes migration less stressful with personalized guidance.
+                            Goozing Immigration makes migration less stressful with personalized guidance.
                         </p>
                     </div>
                 </div>
@@ -799,6 +838,7 @@
                             <li>🌐 24/7 ICT support and consulting</li>
                             <li>🌐 Adventus.io simplifies university admissions</li>
                             <li>🌐 Strategic industry partnerships</li>
+                            <li>🌐 Employee perks: healthcare, birthday leave, pantry access</li>
                         </ul>
                     </div>
                     <div class="mt-auto pt-4">
@@ -835,6 +875,104 @@
                     </div>
                 </div>
 
+                <!-- GEEBEE -->
+                <div
+                    class="bg-black p-8 rounded-xl shadow-lg border border-white w-full max-w-sm h-full flex flex-col justify-between transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:border-red-300">
+                    <div>
+                        <div
+                            class="w-40 h-24 mx-auto mb-4 bg-white rounded-md flex items-center justify-center overflow-hidden">
+                            <img src="ourPartners/GEEBEE.jpg" alt="Leap Geebee Education Logo"
+                                class="object-contain w-full h-full" />
+                        </div>
+                        <h4 class="text-lg font-bold text-white mb-1">Geebee Education</h4>
+
+                        <p class="text-gray-300 text-sm italic mb-2">
+                            Connecting students to over 900 international universities across the globe.
+                        </p>
+
+                        <!-- Updated paragraph for GEEBEE context -->
+                        <p class="text-gray-300 text-sm mb-2">
+                            We are partnered with <span class="font-semibold text-white">Geebee Education</span>,
+                            giving students access to study opportunities in the USA, Canada, Australia, the UK, New
+                            Zealand,
+                            and several European countries.
+                        </p>
+                    </div>
+                    <div class="mt-auto pt-4">
+                        <p class="text-gray-400 italic">
+                            Geebee Education supports students in achieving their academic goals and exploring
+                            international opportunities with confidence.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- TRENT -->
+                <div
+                    class="bg-black p-8 rounded-xl shadow-lg border border-white w-full max-w-sm h-full flex flex-col justify-between transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:border-red-300">
+                    <div>
+                        <div
+                            class="w-40 h-24 mx-auto mb-4 bg-white rounded-md flex items-center justify-center overflow-hidden">
+                            <img src="ourPartners/TRENT.png" alt="TRENT Global College Logo"
+                                class="object-contain w-full h-full" />
+                        </div>
+                        <h4 class="text-lg font-bold text-white mb-1">TRENT Global College</h4>
+
+                        <p class="text-gray-300 text-sm italic mb-2">
+                            Practical, industry-focused programs with international recognition.
+                        </p>
+
+                        <!-- Main context paragraph -->
+                        <p class="text-gray-300 text-sm mb-2">
+                            Trent Global College offers practical, industry-focused programs in Singapore with short
+                            course durations and the opportunity for students to work full-time during paid internships.
+                            This enables learners to gain valuable skills and hands-on experience, enhancing their
+                            prospects for securing high-paying jobs overseas after obtaining internationally recognized
+                            qualifications in Singapore.
+                        </p>
+                    </div>
+                    <div class="mt-auto pt-4">
+                        <p class="text-gray-400 italic">
+                            Trent Global College prepares students for global careers by combining education with
+                            real-world experience.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- FLEEMING -->
+                <div
+                    class="bg-black p-8 rounded-xl shadow-lg border border-white w-full max-w-sm h-full flex flex-col justify-between transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:border-red-300">
+                    <div>
+                        <div
+                            class="w-40 h-24 mx-auto mb-4 bg-white rounded-md flex items-center justify-center overflow-hidden">
+                            <img src="ourPartners/FLEEMING.jpg" alt="Fleming College Logo"
+                                class="object-contain w-full h-full" />
+                        </div>
+                        <h4 class="text-lg font-bold text-white mb-1">Fleming College</h4>
+
+                        <p class="text-gray-300 text-sm italic mb-2">
+                            High-demand, industry-focused programs in Canada for career-ready graduates.
+                        </p>
+
+                        <!-- Main context paragraph -->
+                        <p class="text-gray-300 text-sm mb-2">
+                            Fleming College offers students a wide range of program options in Canada, including
+                            Practical Nursing,
+                            Personal Support Worker/Caregiving, and specialized courses in Artificial Intelligence.
+                            Programs include
+                            practical training and opportunities to gain hands-on experience through industry
+                            placements.
+                        </p>
+                    </div>
+                    <div class="mt-auto pt-4">
+                        <p class="text-gray-400 italic">
+                            Fleming College helps students acquire valuable skills and internationally recognized
+                            qualifications,
+                            preparing them for successful careers abroad.
+                        </p>
+                    </div>
+                </div>
+
+
             </div>
 
         </div>
@@ -870,18 +1008,38 @@
                     <div class="md:w-1/2 flex flex-col">
                         <div id="form-section"
                             class="bg-black p-8 rounded-lg shadow-lg flex flex-col w-full h-full items-center justify-center text-center">
+
                             <h2 class="text-3xl font-bold text-red-800 mb-6">Message Us</h2>
+
                             <p class="text-white mb-6">
-                                For inquiries, feel free to contact us directly through Messenger.
+                                For inquiries or faster assistance, you may contact us through Messenger or fill out our
+                                Free Call Assessment Form. Our visa consultant will reach out within 24 hours to help
+                                guide you toward your goal of going abroad.
                             </p>
-                            <a href="https://www.facebook.com/messages/t/61570211881355" target="_blank"
-                                class="inline-flex items-center bg-blue-600 text-white py-3 px-6 rounded-md font-medium hover:bg-blue-700 transition">
-                                <i class="fab fa-facebook-messenger mr-2 text-lg"></i>
-                                Message us on Messenger
-                            </a>
+
+
+                            <!-- Button Wrapper (makes widths match) -->
+                            <div class="w-full max-w-[320px] flex flex-col items-center">
+
+                                <!-- Messenger Button -->
+                                <a href="https://www.facebook.com/messages/t/61570211881355" target="_blank"
+                                    class="inline-flex items-center justify-center w-full bg-blue-600 text-white py-3 px-6 rounded-md font-medium hover:bg-blue-700 transition mb-4">
+                                    <i class="fab fa-facebook-messenger mr-2 text-lg"></i>
+                                    Message us on Messenger
+                                </a>
+
+                                <!-- Google Form Button -->
+                                <a href="https://shorturl.at/Oephz" target="_blank"
+                                    class="inline-flex items-center justify-center w-full bg-green-600 text-white py-3 px-6 rounded-md font-medium hover:bg-green-700 transition">
+                                    <i class="fab fa-google mr-2 text-lg"></i>
+                                    Fill out Google Form
+                                </a>
+
+                            </div>
+
                         </div>
                     </div>
-
+                    
                     <!-- Right Column -->
                     <div class="md:w-1/2 flex flex-col">
                         <div class="bg-black p-8 rounded-lg shadow-lg flex flex-col w-full h-full">
@@ -897,12 +1055,9 @@
                                             <span class="font-semibold text-white">Office Address</span>
                                             <p class="text-white">
                                                 You may visit us at our office located at:<br />
-                                                2nd Floor, MC Premiere Building,<br />
-                                                Balintawak EDSA, Quezon City,<br />
-                                                Philippines, 1181.<br />
-                                                Landmark 📍 LRT Balintawak Station
+                                                2nd Floor, MC Premiere Building, Balintawak EDSA, Quezon City,
+                                                Philippines, 1181.
                                             </p>
-
                                         </div>
                                     </div>
 
@@ -929,7 +1084,7 @@
                                         </span>
                                         <div>
                                             <span class="font-semibold text-white">WhatsApp</span>
-                                            <p class="text-white">+63967 214 0260</p>
+                                            <p class="text-white">+63953 460 0255</p>
                                         </div>
                                     </div>
 
@@ -962,7 +1117,7 @@
                                     target="_blank" class="text-white hover:text-red-600" aria-label="Facebook">
                                     <i class="fab fa-facebook-f text-xl"></i>
                                 </a>
-                                <a href="https://www.tiktok.com/@bridgewayvisatravelcorp" target="_blank"
+                                <a href="https://www.tiktok.com/@bridgewayvisa_" target="_blank"
                                     class="text-white hover:text-red-600" aria-label="TikTok">
                                     <i class="fab fa-tiktok text-xl"></i>
                                 </a>
@@ -1001,6 +1156,7 @@
                     <ul class="space-y-2">
                         <li><a href="#office" class="text-white hover:text-red-500">Office</a></li>
                         <li><a href="#services" class="text-white hover:text-red-500">Services</a></li>
+                        <li><a href="#consultants" class="text-white hover:text-red-500">Visa Consultants</a></li>
                         <li><a href="#about" class="text-white hover:text-red-500">About</a></li>
                         <li><a href="#partners" class="text-white hover:text-red-500">Partners</a></li>
                         <li><a href="#contact" class="text-white hover:text-red-500">Contact</a></li>
@@ -1013,8 +1169,7 @@
                         <li><a href="#services" class="text-white hover:text-red-500">Tourist Visa</a></li>
                         <li><a href="#services" class="text-white hover:text-red-500">Student Visa</a></li>
                         <li><a href="#services" class="text-white hover:text-red-500">Dependent Visa / Open Work
-                                Permit</a>
-                        </li>
+                                Permit</a></li>
                         <li><a href="#services" class="text-white hover:text-red-500">Post Graduation Work Visa</a></li>
                         <li><a href="#services" class="text-white hover:text-red-500">Residency & Citizenship</a></li>
                         <li><a href="#services" class="text-white hover:text-red-500">Skills Migration</a></li>
@@ -1031,8 +1186,8 @@
                     <a href="https://www.facebook.com/people/Bridgeway-Visa-Travel-Corporation/61570211881355/"
                         target="_blank" class="text-white hover:text-black" aria-label="Facebook"><i
                             class="fab fa-facebook-f"></i></a>
-                    <a href="https://www.tiktok.com/@bridgewayvisatravelcorp?_r=1&_d=secCgYIASAHKAESPgo8xHoRj7K%2BaIv6riuPgyvl0MRxivpwVasfaZYSHe3Xag78ETMzTkVg7bjGcBfzlci4i7ZlpjjI3jjP22z0GgA%3D&_svg=1&checksum=3a4870bc50ea4a40bcdbbe4d85fd20e3dc556df6f5ccdc6ef04908bf1178dad8&sec_uid=MS4wLjABAAAAgAQ3HyddRdNREpbl8VVwqlp6GCA7tSjDmyMe9KXaweMBbc2Z6-AT_ZvUL5XMSbsW&sec_user_id=MS4wLjABAAAAu0iXaQ7aQoXVJH3APNvqPbAJzmVNJ2wMu8IxhDrdSOpxYx79HE_SELzYovyLfMHT&share_app_id=1180&share_author_id=6950919921543185410&share_link_id=BF2232E0-03DA-4938-AA35-A225804932D1&share_scene=1&sharer_language=en&social_share_type=5&source=h5_t&timestamp=1751692685&tt_from=copy&u_code=2lcc96jmejlje&ug_btm=b6880%2Cb5836&user_id=64357713932996608&utm_campaign=client_share&utm_medium=ios&utm_source=copy"
-                        target="_blank" class="text-white hover:text-red-600" aria-label="TikTok">
+                    <a href="https://www.tiktok.com/@bridgewayvisa_" target="_blank"
+                        class="text-white hover:text-red-600" aria-label="TikTok">
                         <i class="fab fa-tiktok"
                             style="font-size:1.5rem;width:1.5rem;height:1.5rem;display:inline-block;"></i>
                     </a>
