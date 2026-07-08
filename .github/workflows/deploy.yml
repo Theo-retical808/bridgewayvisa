@@ -36,16 +36,19 @@ jobs:
         working-directory: bridgewayvisa-react
 
       - name: Copy assets to public folder
-        run: cp -r ../assets ./public/assets
-        working-directory: bridgewayvisa-react
+        run: |
+          mkdir -p bridgewayvisa-react/public/assets
+          cp -r assets/* bridgewayvisa-react/public/assets/
 
       - name: Build
         run: npm run build
         working-directory: bridgewayvisa-react
 
       - name: Copy CNAME to dist
-        run: cp ../CNAME ./dist/CNAME
-        working-directory: bridgewayvisa-react
+        run: cp CNAME bridgewayvisa-react/dist/CNAME
+
+      - name: Add .nojekyll to dist
+        run: touch bridgewayvisa-react/dist/.nojekyll
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
