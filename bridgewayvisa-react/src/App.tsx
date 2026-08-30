@@ -13,7 +13,7 @@ import Partners from "./components/Partners";
 import Payment from "./components/Payment";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
-import BackToTop from "./components/BackToTop";
+import BubbleChat from "./components/BubbleChat";
 import SectionDivider from "./components/SectionDivider";
 
 export default function App() {
@@ -47,7 +47,7 @@ export default function App() {
       <Contact />
       <SectionDivider />
       <Footer />
-      <BackToTop />
+      <BubbleChat />
     </div>
   );
 }
