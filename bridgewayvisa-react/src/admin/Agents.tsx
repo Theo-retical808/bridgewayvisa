@@ -285,6 +285,34 @@ export default function Agents() {
 
   useEffect(() => {
     fetchAgents();
+
+    // Subscribe to live agent status changes so the admin sees
+    // online/offline toggle in real time without refreshing
+    const channel = supabase
+      .channel("agents_presence")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "agents" },
+        (payload) => {
+          const updated = payload.new as AgentRow;
+          setAgents((prev) =>
+            prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "agents" },
+        (payload) => {
+          const inserted = payload.new as AgentRow;
+          setAgents((prev) => [inserted, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   async function fetchAgents() {

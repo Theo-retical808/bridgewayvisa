@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AgentSidebar from "./components/AgentSidebar";
 import AgentHeader from "./components/AgentHeader";
 import AgentDashboard from "./AgentDashboard";
@@ -33,6 +33,47 @@ export default function AgentApp() {
 
   // Use the agent's DB profile ID (not auth UUID) as the lookup key
   const agentProfileId = user?.profileId || "";
+
+  // ── Presence: mark online on mount, offline on unmount/logout ──────────────
+  useEffect(() => {
+    if (!agentProfileId) return;
+
+    // Set online when the agent dashboard loads
+    supabase
+      .from("agents")
+      .update({ status: "online" })
+      .eq("id", agentProfileId)
+      .then(() => {});
+
+    // Set offline when the tab is hidden/closed or component unmounts
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        supabase
+          .from("agents")
+          .update({ status: "offline" })
+          .eq("id", agentProfileId)
+          .then(() => {});
+      } else if (document.visibilityState === "visible") {
+        supabase
+          .from("agents")
+          .update({ status: "online" })
+          .eq("id", agentProfileId)
+          .then(() => {});
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      // Set offline when component unmounts (logout)
+      supabase
+        .from("agents")
+        .update({ status: "offline" })
+        .eq("id", agentProfileId)
+        .then(() => {});
+    };
+  }, [agentProfileId]);
 
   const waiting = getWaitingSessions();
   const activeChat = getAgentActiveSession(agentProfileId);
