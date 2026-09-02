@@ -385,14 +385,9 @@ export default function Agents() {
     email: string,
     password: string
   ) {
-    // Step 1: Create the Supabase Auth user via admin API.
-    // NOTE: Creating users in Auth requires the service-role key.
-    // On the FREE TIER without a backend, the recommended approach is:
-    //   - Admin signs up the agent themselves via Auth signUp,
-    //   - Or use Supabase Dashboard → Auth → Users.
-    //
-    // Here we use signUp with emailConfirmation disabled (set in Supabase Auth settings).
-    // The agent will get an email to confirm if email confirmation is enabled.
+    // Step 1: Create the Supabase Auth user.
+    // signUp() on the anon client does NOT switch the admin's session —
+    // it creates the user in Auth but the admin remains logged in.
     const { data: authData, error: authError } =
       await supabase.auth.signUp({ email, password });
 
@@ -400,21 +395,20 @@ export default function Agents() {
       throw new Error(authError?.message || "Failed to create auth user.");
     }
 
-    // Step 2: Insert into agents profile table
+    // Step 2: Insert the agent profile via a SECURITY DEFINER RPC.
+    // A direct INSERT would fail because signUp() temporarily shifts
+    // the active session context, causing the RLS is_admin() check to
+    // return false. The RPC runs as the DB owner and bypasses that.
     const { data: agentData, error: agentError } = await supabase
-      .from("agents")
-      .insert({
-        auth_user_id: authData.user.id,
-        email,
-        full_name: name,
-        is_active: true,
-        status: "offline",
+      .rpc("create_agent_profile", {
+        p_auth_user_id: authData.user.id,
+        p_email: email,
+        p_full_name: name,
       })
-      .select()
       .single<AgentRow>();
 
-    if (agentError) {
-      throw new Error(agentError.message);
+    if (agentError || !agentData) {
+      throw new Error(agentError?.message || "Failed to create agent profile.");
     }
 
     setAgents((prev) => [agentData, ...prev]);
