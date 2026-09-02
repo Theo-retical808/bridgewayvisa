@@ -70,12 +70,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const appUser = await detectRole();
       if (!appUser) {
-        // Authenticated but no role — sign out and reject
         await supabase.auth.signOut();
         setLoading(false);
         return {
           error: "This account does not have access. Contact your administrator.",
         };
+      }
+
+      // Mark agent as online immediately after login
+      if (appUser.role === "agent") {
+        await supabase
+          .from("agents")
+          .update({ status: "online" })
+          .eq("id", appUser.profileId);
       }
 
       setUser(appUser);
@@ -86,9 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    // Mark agent as offline before signing out
+    if (user?.role === "agent") {
+      await supabase
+        .from("agents")
+        .update({ status: "offline" })
+        .eq("id", user.profileId);
+    }
     await signOut();
     setUser(null);
-  }, []);
+  }, [user]);
 
   return (
     <AuthContext.Provider
