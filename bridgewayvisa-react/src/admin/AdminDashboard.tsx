@@ -70,7 +70,7 @@ export default function AdminDashboard({ onViewSession }: Props) {
         <StatCard
           icon={Circle}
           label="Completed"
-          value={sessions.filter((s) => s.status === "COMPLETED").length}
+          value={sessions.filter((s) => s.status === "ENDED").length}
         />
       </div>
 
@@ -109,7 +109,7 @@ export default function AdminDashboard({ onViewSession }: Props) {
                     className="border-t border-white/5 hover:bg-white/[0.03] cursor-pointer"
                   >
                     <td className="px-5 py-3 text-zinc-300 font-mono text-xs">
-                      {s.id}
+                      {s.session_id ?? s.id}
                     </td>
                     <td className="px-5 py-3 text-zinc-200">
                       {s.client.name}
@@ -154,7 +154,7 @@ export default function AdminDashboard({ onViewSession }: Props) {
                     className="border-t border-white/5 hover:bg-white/[0.03] cursor-pointer"
                   >
                     <td className="px-5 py-3 text-zinc-300 font-mono text-xs">
-                      {s.id}
+                      {s.session_id ?? s.id}
                     </td>
                     <td className="px-5 py-3 text-zinc-200">
                       {s.client.name}

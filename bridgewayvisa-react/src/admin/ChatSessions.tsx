@@ -25,14 +25,17 @@ function SessionStatusPill({ status }: { status: string }) {
 }
 
 export default function ChatSessions({ onViewSession }: Props) {
-  const { sessions } = useSessions();
+  const { sessions, loadingSessions } = useSessions();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   const filtered = sessions.filter((s) => {
+    const sid = s.session_id ?? s.id;
     const matchQuery =
-      s.id.toLowerCase().includes(query.toLowerCase()) ||
-      s.client.name.toLowerCase().includes(query.toLowerCase());
+      sid.toLowerCase().includes(query.toLowerCase()) ||
+      s.client.name.toLowerCase().includes(query.toLowerCase()) ||
+      s.client.email.toLowerCase().includes(query.toLowerCase()) ||
+      s.client.contact.toLowerCase().includes(query.toLowerCase());
     const matchStatus =
       statusFilter === "ALL" || s.status === statusFilter;
     return matchQuery && matchStatus;
@@ -46,7 +49,7 @@ export default function ChatSessions({ onViewSession }: Props) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search session ID or client..."
+            placeholder="Search session, client, email, contact..."
             className="w-full rounded-lg bg-zinc-900/60 border border-white/10 pl-9 pr-3 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60"
           />
         </div>
@@ -57,9 +60,8 @@ export default function ChatSessions({ onViewSession }: Props) {
         >
           <option value="ALL">All Status</option>
           <option value="WAITING">Waiting</option>
-          <option value="ASSIGNED">Assigned</option>
           <option value="ACTIVE">Active</option>
-          <option value="COMPLETED">Completed</option>
+          <option value="ENDED">Ended</option>
         </select>
       </div>
 
@@ -77,27 +79,13 @@ export default function ChatSessions({ onViewSession }: Props) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((s) => (
-                <tr
-                  key={s.id}
-                  onClick={() => onViewSession(s.id)}
-                  className="border-t border-white/5 hover:bg-white/[0.03] cursor-pointer"
-                >
-                  <td className="px-5 py-3 text-zinc-300 font-mono text-xs">
-                    {s.id}
+              {loadingSessions ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-8 text-center">
+                    <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
                   </td>
-                  <td className="px-5 py-3 text-zinc-200">{s.client.name}</td>
-                  <td className="px-5 py-3 text-zinc-400">
-                    {s.agentName || "—"}
-                  </td>
-                  <td className="px-5 py-3 text-zinc-400">{s.service}</td>
-                  <td className="px-5 py-3">
-                    <SessionStatusPill status={s.status} />
-                  </td>
-                  <td className="px-5 py-3 text-zinc-500">{s.createdAt}</td>
                 </tr>
-              ))}
-              {filtered.length === 0 && (
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}
@@ -106,6 +94,29 @@ export default function ChatSessions({ onViewSession }: Props) {
                     No sessions found.
                   </td>
                 </tr>
+              ) : (
+                filtered.map((s) => (
+                  <tr
+                    key={s.id}
+                    onClick={() => onViewSession(s.id)}
+                    className="border-t border-white/5 hover:bg-white/[0.03] cursor-pointer"
+                  >
+                    <td className="px-5 py-3 text-zinc-300 font-mono text-xs">
+                      {s.session_id ?? s.id}
+                    </td>
+                    <td className="px-5 py-3 text-zinc-200">
+                      {s.client.name}
+                    </td>
+                    <td className="px-5 py-3 text-zinc-400">
+                      {s.agentName || "—"}
+                    </td>
+                    <td className="px-5 py-3 text-zinc-400">{s.service}</td>
+                    <td className="px-5 py-3">
+                      <SessionStatusPill status={s.status} />
+                    </td>
+                    <td className="px-5 py-3 text-zinc-500">{s.createdAt}</td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

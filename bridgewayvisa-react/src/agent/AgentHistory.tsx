@@ -11,12 +11,12 @@ export default function AgentHistory() {
   const [selected, setSelected] = useState<string | null>(null);
 
   const mySessions = user
-    ? getAgentSessions(user.id).filter((s) => s.status === "COMPLETED")
+    ? getAgentSessions(user.profileId).filter((s) => s.status === "ENDED")
     : [];
 
   const filtered = mySessions.filter(
     (s) =>
-      s.id.toLowerCase().includes(query.toLowerCase()) ||
+      (s.session_id ?? s.id).toLowerCase().includes(query.toLowerCase()) ||
       s.client.name.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -61,12 +61,12 @@ export default function AgentHistory() {
                   className="border-t border-white/5 hover:bg-white/[0.03] cursor-pointer"
                 >
                   <td className="px-5 py-3 text-zinc-500 font-mono text-xs">
-                    {s.id}
+                    {s.session_id ?? s.id}
                   </td>
                   <td className="px-5 py-3 text-zinc-200">{s.client.name}</td>
                   <td className="px-5 py-3 text-zinc-400">{s.service}</td>
                   <td className="px-5 py-3 text-zinc-500">{s.createdAt}</td>
-                  <td className="px-5 py-3 text-zinc-500">{s.endedAt}</td>
+                  <td className="px-5 py-3 text-zinc-500">{s.endedAt ?? "—"}</td>
                 </tr>
               ))}
               {filtered.length === 0 && (

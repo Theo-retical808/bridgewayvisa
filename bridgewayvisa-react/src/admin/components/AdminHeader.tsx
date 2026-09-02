@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function AdminHeader({ title, current, onNavigate }: Props) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   return (
     <div className="sticky top-0 z-10 bg-zinc-950/95 backdrop-blur border-b border-white/10">
@@ -24,6 +24,9 @@ export default function AdminHeader({ title, current, onNavigate }: Props) {
           {title}
         </h1>
         <div className="flex items-center gap-3">
+          <span className="hidden sm:block text-xs text-zinc-500">
+            {user?.fullName}
+          </span>
           <button
             onClick={logout}
             className="hidden sm:flex items-center gap-2 text-xs text-zinc-500 hover:text-red-400 transition-colors"

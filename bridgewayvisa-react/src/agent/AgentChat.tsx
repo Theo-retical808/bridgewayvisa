@@ -26,7 +26,11 @@ function timeNow(): string {
   });
 }
 
-function MessageBubble({ message }: { message: ChatSession["messages"][number] }) {
+function MessageBubble({
+  message,
+}: {
+  message: ChatSession["messages"][number];
+}) {
   const isAgent = message.sender === "agent";
   return (
     <div className={`flex flex-col ${isAgent ? "items-end" : "items-start"}`}>
@@ -70,12 +74,18 @@ function SessionStatusTag({ status }: { status: string }) {
   );
 }
 
-function MessageInput({ onSend }: { onSend: (text: string) => void }) {
+function MessageInput({
+  onSend,
+  disabled,
+}: {
+  onSend: (text: string) => void;
+  disabled?: boolean;
+}) {
   const [value, setValue] = useState("");
 
   function submit() {
     const text = value.trim();
-    if (!text) return;
+    if (!text || disabled) return;
     onSend(text);
     setValue("");
   }
@@ -83,19 +93,26 @@ function MessageInput({ onSend }: { onSend: (text: string) => void }) {
   return (
     <div className="px-5 sm:px-6 py-3 border-t border-white/10">
       <div className="flex items-center gap-3">
-        <button className="text-zinc-500 hover:text-white shrink-0">
+        <button
+          className="text-zinc-500 hover:text-white shrink-0"
+          disabled={disabled}
+        >
           <Paperclip className="w-4 h-4" />
         </button>
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Type your message..."
-          className="flex-1 bg-zinc-900/60 border border-white/10 rounded-full px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60"
+          placeholder={
+            disabled ? "Conversation has ended." : "Type your message..."
+          }
+          disabled={disabled}
+          className="flex-1 bg-zinc-900/60 border border-white/10 rounded-full px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60 disabled:opacity-50 disabled:cursor-not-allowed"
         />
         <button
           onClick={submit}
-          className="shrink-0 inline-flex items-center gap-1.5 text-sm font-medium text-white bg-red-700 hover:bg-red-600 transition-colors px-4 py-2.5 rounded-full"
+          disabled={disabled}
+          className="shrink-0 inline-flex items-center gap-1.5 text-sm font-medium text-white bg-red-700 hover:bg-red-600 transition-colors px-4 py-2.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send className="w-3.5 h-3.5" />
           Send
@@ -112,6 +129,9 @@ export default function AgentChat({ session, onBack, onEnd }: Props) {
   const [askOpen, setAskOpen] = useState(false);
   const [askText, setAskText] = useState("");
   const [endOpen, setEndOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const isEnded = session.status === "ENDED";
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -120,8 +140,16 @@ export default function AgentChat({ session, onBack, onEnd }: Props) {
     });
   }, [session.messages]);
 
-  function handleSend(text: string) {
-    addMessage(session.id, { sender: "agent", text, time: timeNow() });
+  async function handleSend(text: string) {
+    if (sending || isEnded) return;
+    setSending(true);
+    await addMessage(session.id, {
+      sender: "agent",
+      sender_id: user?.profileId ?? null,
+      text,
+      time: timeNow(),
+    });
+    setSending(false);
   }
 
   function handleAskAdmin() {
@@ -147,7 +175,7 @@ export default function AgentChat({ session, onBack, onEnd }: Props) {
           </p>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-zinc-500 text-xs font-mono">
-              {session.id}
+              {session.session_id}
             </span>
             <span className="text-zinc-700">&middot;</span>
             <SessionStatusTag status={session.status} />
@@ -158,12 +186,27 @@ export default function AgentChat({ session, onBack, onEnd }: Props) {
       {/* Client & service info strip */}
       <div className="px-5 sm:px-6 py-3 border-b border-white/10 flex flex-wrap gap-x-6 gap-y-1 text-xs text-zinc-500">
         <span>
-          Service: <span className="text-zinc-300">{session.service}</span>
+          Service:{" "}
+          <span className="text-zinc-300">{session.service}</span>
         </span>
         <span>
-          Contact: <span className="text-zinc-300">{session.client.contact}</span>
+          Contact:{" "}
+          <span className="text-zinc-300">{session.client.contact}</span>
+        </span>
+        <span>
+          Email:{" "}
+          <span className="text-zinc-300">{session.client.email}</span>
         </span>
       </div>
+
+      {/* Ended banner */}
+      {isEnded && (
+        <div className="px-5 sm:px-6 py-2.5 bg-zinc-800/60 border-b border-white/10 text-center">
+          <p className="text-xs text-zinc-400">
+            This conversation has ended. No new messages can be sent.
+          </p>
+        </div>
+      )}
 
       {/* Messages */}
       <div
@@ -224,38 +267,40 @@ export default function AgentChat({ session, onBack, onEnd }: Props) {
       )}
 
       {/* Action bar */}
-      <div className="px-5 sm:px-6 py-3 border-t border-white/10 flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setAskOpen(true)}
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-colors"
-        >
-          <AlertTriangle className="w-3.5 h-3.5" />
-          Ask Admin
-        </button>
-        <button
-          onClick={() => setAskOpen(true)}
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-colors"
-        >
-          <StickyNote className="w-3.5 h-3.5" />
-          Add Note
-        </button>
-        <button
-          disabled
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-600 border border-white/5 px-3 py-1.5 rounded-lg cursor-not-allowed"
-        >
-          <Repeat className="w-3.5 h-3.5" />
-          Transfer
-        </button>
-        <button
-          onClick={() => setEndOpen(true)}
-          className="ml-auto inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-white hover:bg-red-700 border border-red-700/40 px-3 py-1.5 rounded-lg transition-colors"
-        >
-          <CircleX className="w-3.5 h-3.5" />
-          End Conversation
-        </button>
-      </div>
+      {!isEnded && (
+        <div className="px-5 sm:px-6 py-3 border-t border-white/10 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setAskOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Ask Admin
+          </button>
+          <button
+            onClick={() => setAskOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <StickyNote className="w-3.5 h-3.5" />
+            Add Note
+          </button>
+          <button
+            disabled
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-600 border border-white/5 px-3 py-1.5 rounded-lg cursor-not-allowed"
+          >
+            <Repeat className="w-3.5 h-3.5" />
+            Transfer
+          </button>
+          <button
+            onClick={() => setEndOpen(true)}
+            className="ml-auto inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-white hover:bg-red-700 border border-red-700/40 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <CircleX className="w-3.5 h-3.5" />
+            End Conversation
+          </button>
+        </div>
+      )}
 
-      <MessageInput onSend={handleSend} />
+      <MessageInput onSend={handleSend} disabled={isEnded || sending} />
 
       {/* Ask admin modal */}
       {askOpen && (
@@ -271,7 +316,7 @@ export default function AgentChat({ session, onBack, onEnd }: Props) {
               </button>
             </div>
             <p className="text-xs text-zinc-500 mb-3">
-              Session {session.id} &middot; {session.client.name}
+              Session {session.session_id} &middot; {session.client.name}
             </p>
             <label className="block text-xs text-zinc-500 mb-1.5">
               Your question

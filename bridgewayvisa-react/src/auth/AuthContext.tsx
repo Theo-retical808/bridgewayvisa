@@ -1,43 +1,98 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { User } from "./types";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
+import { supabase } from "../lib/supabase";
+import { detectRole, signOut, AppUser } from "../lib/auth";
 
 interface AuthState {
-  user: User | null;
-  login: (user: User) => void;
-  logout: () => void;
+  user: AppUser | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
 
-const STORAGE_KEY = "bridgeway_auth";
-
-function loadUser(): User | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as User;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(loadUser);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = useCallback((u: User) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    setUser(u);
+  // On mount, restore session from Supabase and detect role
+  useEffect(() => {
+    let mounted = true;
+
+    async function restoreSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && mounted) {
+        const appUser = await detectRole();
+        if (mounted) setUser(appUser);
+      }
+      if (mounted) setLoading(false);
+    }
+
+    restoreSession();
+
+    // Listen for auth state changes (token refresh, sign-out from another tab, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+        if (session) {
+          const appUser = await detectRole();
+          setUser(appUser);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+  const login = useCallback(
+    async (email: string, password: string): Promise<{ error: string | null }> => {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        setLoading(false);
+        return { error: "Invalid email or password." };
+      }
+
+      const appUser = await detectRole();
+      if (!appUser) {
+        // Authenticated but no role — sign out and reject
+        await supabase.auth.signOut();
+        setLoading(false);
+        return {
+          error: "This account does not have access. Contact your administrator.",
+        };
+      }
+
+      setUser(appUser);
+      setLoading(false);
+      return { error: null };
+    },
+    []
+  );
+
+  const logout = useCallback(async () => {
+    await signOut();
     setUser(null);
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, isAuthenticated: !!user }}
+      value={{ user, loading, login, logout, isAuthenticated: !!user }}
     >
       {children}
     </AuthContext.Provider>

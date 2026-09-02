@@ -1,25 +1,20 @@
-export type UserRole = "admin" | "agent";
+// Re-export AppUser so existing imports of User from this file still work.
+export type { AppUser as User, UserRole } from "../lib/auth";
 
-export interface User {
-  id: string;
-  username: string;
-  name: string;
-  role: UserRole;
-  email: string;
-}
-
-export type SessionStatus = "WAITING" | "ASSIGNED" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+export type SessionStatus = "WAITING" | "ACTIVE" | "ENDED" | "ASSIGNED";
 
 export interface SessionMessage {
-  id: number;
+  id: string;         // UUID string (from DB) or temp string
   sender: "client" | "agent";
+  sender_id: string | null;
   text: string;
-  time: string;
+  time: string;       // formatted display time
   internal?: boolean;
 }
 
 export interface ChatSession {
-  id: string;
+  id: string;         // DB UUID (chat_sessions.id)
+  session_id: string; // human-readable session code e.g. CHAT-12345
   client: {
     name: string;
     email: string;

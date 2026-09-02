@@ -25,7 +25,7 @@ function WaitingClientCard({
             {session.client.name}
           </p>
           <p className="text-zinc-500 text-xs mt-0.5">
-            Waiting &middot; Session {session.id} &middot; {session.service}
+            Waiting &middot; Session {session.session_id ?? session.id} &middot; {session.service}
           </p>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function AgentDashboard({ onAccept, onViewChat }: Props) {
                       {s.client.name}
                     </p>
                     <p className="text-zinc-500 text-xs mt-0.5">
-                      {s.id} &middot; {s.service}
+                      {s.session_id ?? s.id} &middot; {s.service}
                     </p>
                   </div>
                 </div>

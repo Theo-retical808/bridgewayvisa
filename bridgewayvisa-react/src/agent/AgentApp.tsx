@@ -8,6 +8,7 @@ import AskAdmin from "./AskAdmin";
 import { useSessions } from "../auth/SessionStore";
 import { useAuth } from "../auth/AuthContext";
 import { ChatSession } from "../auth/types";
+import { supabase } from "../lib/supabase";
 
 const TITLES: Record<string, string> = {
   dashboard: "Dashboard",
@@ -23,30 +24,54 @@ export default function AgentApp() {
     getWaitingSessions,
     getActiveSessions,
     getAgentActiveSession,
-    acceptSession,
     endSession,
+    refreshSessions,
   } = useSessions();
 
   const [current, setCurrent] = useState("dashboard");
+  const [claimError, setClaimError] = useState<string | null>(null);
 
-  const agentId = user?.id || "01";
-  const agentName = user?.name || "Maria Santos";
+  // Use the agent's DB profile ID (not auth UUID) as the lookup key
+  const agentProfileId = user?.profileId || "";
 
   const waiting = getWaitingSessions();
-  const activeChat = getAgentActiveSession(agentId);
+  const activeChat = getAgentActiveSession(agentProfileId);
 
   const pendingAsks = getActiveSessions().filter(
     (s) => s.askAdmin?.pending
   ).length;
 
-  function handleAccept(session: ChatSession) {
-    acceptSession(session.id, agentId, agentName);
+  async function handleAccept(session: ChatSession) {
+    if (!agentProfileId) return;
+    setClaimError(null);
+
+    // Use the atomic RPC to prevent race conditions
+    const { data: claimed, error } = await supabase.rpc("claim_chat_session", {
+      p_session_id: session.id,
+      p_agent_id: agentProfileId,
+    });
+
+    if (error) {
+      setClaimError("Failed to claim session. Please try again.");
+      return;
+    }
+
+    if (!claimed) {
+      setClaimError(
+        "This session was already claimed by another agent."
+      );
+      // Refresh to get the latest state
+      await refreshSessions();
+      return;
+    }
+
+    // Realtime will update sessions automatically — navigate to chat
     setCurrent("chat");
   }
 
-  function handleEnd() {
+  async function handleEnd() {
     if (!activeChat) return;
-    endSession(activeChat.id);
+    await endSession(activeChat.id);
     setCurrent("dashboard");
   }
 
@@ -71,8 +96,22 @@ export default function AgentApp() {
           />
         )}
 
+        {claimError && (
+          <div className="mx-5 sm:mx-8 mt-4 rounded-lg border border-red-700/30 bg-red-700/10 px-4 py-3 text-sm text-red-400 flex items-center justify-between">
+            {claimError}
+            <button
+              onClick={() => setClaimError(null)}
+              className="text-zinc-500 hover:text-white ml-4"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <main
-          className={isChat ? "flex-1 min-h-0 flex" : "flex-1 px-5 sm:px-8 py-6"}
+          className={
+            isChat ? "flex-1 min-h-0 flex" : "flex-1 px-5 sm:px-8 py-6"
+          }
         >
           {current === "dashboard" && (
             <AgentDashboard
@@ -92,7 +131,11 @@ export default function AgentApp() {
               ) : (
                 <div className="space-y-3">
                   {waiting.map((c) => (
-                    <QueueCard key={c.id} session={c} onAccept={handleAccept} />
+                    <QueueCard
+                      key={c.id}
+                      session={c}
+                      onAccept={handleAccept}
+                    />
                   ))}
                 </div>
               )}
@@ -131,8 +174,8 @@ function QueueCard({
       <div>
         <p className="text-white text-sm font-medium">{session.client.name}</p>
         <p className="text-zinc-500 text-xs mt-0.5">
-          Session {session.id} &middot; {session.service} &middot; created{" "}
-          {session.createdAt}
+          Session {session.session_id} &middot; {session.service} &middot;
+          created {session.createdAt}
         </p>
       </div>
       <button

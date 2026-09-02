@@ -8,6 +8,7 @@ interface Props {
 
 export default function ChatSessionDetails({ sessionId, onBack }: Props) {
   const { sessions } = useSessions();
+  // sessionId here is the DB UUID (session.id)
   const session = sessions.find((s) => s.id === sessionId);
 
   if (!session) {
@@ -43,7 +44,7 @@ export default function ChatSessionDetails({ sessionId, onBack }: Props) {
             <h3 className="text-zinc-500 text-xs uppercase tracking-wide">
               Session Info
             </h3>
-            <InfoRow label="Session ID" value={session.id} mono />
+            <InfoRow label="Session ID" value={session.session_id ?? session.id} mono />
             <InfoRow label="Service" value={session.service} />
             <InfoRow label="Status" value={session.status} />
             <InfoRow label="Created" value={session.createdAt} />
@@ -94,11 +95,17 @@ export default function ChatSessionDetails({ sessionId, onBack }: Props) {
                   return (
                     <div
                       key={m.id}
-                      className={`flex flex-col ${isClient ? "items-start" : "items-end"}`}
+                      className={`flex flex-col ${
+                        isClient ? "items-start" : "items-end"
+                      }`}
                     >
                       <div className="flex items-center gap-2 mb-1 text-xs text-zinc-500">
                         <span className="text-zinc-400">
-                          {isClient ? "Client" : m.internal ? "System" : "Agent"}
+                          {isClient
+                            ? "Client"
+                            : m.internal
+                            ? "System"
+                            : "Agent"}
                         </span>
                         <span>{m.time}</span>
                       </div>
@@ -138,7 +145,9 @@ function InfoRow({
     <div className="flex items-center justify-between gap-4">
       <span className="text-zinc-500 text-sm shrink-0">{label}</span>
       <span
-        className={`text-zinc-200 text-sm text-right ${mono ? "font-mono text-xs" : ""}`}
+        className={`text-zinc-200 text-sm text-right ${
+          mono ? "font-mono text-xs" : ""
+        }`}
       >
         {value}
       </span>

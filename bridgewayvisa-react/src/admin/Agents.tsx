@@ -10,22 +10,19 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { DbAgent } from "../lib/database.types";
 
-interface AgentRecord {
+interface AgentRow {
   id: string;
-  name: string;
-  status: "Online" | "Offline";
-  sessions: number;
+  auth_user_id: string;
+  full_name: string;
   email: string;
+  is_active: boolean;
+  status: DbAgent["status"];
+  created_at: string;
+  session_count?: number;
 }
-
-const INITIAL_AGENTS: AgentRecord[] = [
-  { id: "01", name: "Maria Santos", status: "Online", sessions: 12, email: "maria.santos@bridgeway.ph" },
-  { id: "02", name: "Carlo Cruz", status: "Offline", sessions: 8, email: "carlo.cruz@bridgeway.ph" },
-  { id: "03", name: "Ana Reyes", status: "Online", sessions: 15, email: "ana.reyes@bridgeway.ph" },
-  { id: "04", name: "Jomar Villanueva", status: "Online", sessions: 6, email: "jomar.v@bridgeway.ph" },
-  { id: "05", name: "Liza Bautista", status: "Offline", sessions: 3, email: "liza.b@bridgeway.ph" },
-];
 
 function StatusDot({ online }: { online: boolean }) {
   return (
@@ -46,8 +43,8 @@ function ActionMenu({
   agent,
   onAction,
 }: {
-  agent: AgentRecord;
-  onAction: (action: string, agent: AgentRecord) => void;
+  agent: AgentRow;
+  onAction: (action: string, agent: AgentRow) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -66,7 +63,7 @@ function ActionMenu({
     { key: "edit", label: "Edit", icon: Pencil },
     {
       key: "toggle",
-      label: agent.status === "Online" ? "Deactivate" : "Activate",
+      label: agent.is_active ? "Deactivate" : "Activate",
       icon: UserX,
     },
     { key: "delete", label: "Delete", icon: Trash2, danger: true },
@@ -110,20 +107,36 @@ function AddAgentModal({
   onAdd,
 }: {
   onClose: () => void;
-  onAdd: (name: string, email: string) => void;
+  onAdd: (name: string, email: string, password: string) => Promise<void>;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit() {
+    if (!name.trim() || !email.trim() || !password.trim()) return;
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await onAdd(name.trim(), email.trim(), password);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create agent.");
+    }
+    setLoading(false);
+  }
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 px-4">
       <div className="w-full max-w-sm rounded-xl border border-white/10 bg-zinc-900 p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-white font-semibold">Add Agent</h3>
-          <button
-            onClick={onClose}
-            className="text-zinc-500 hover:text-white"
-          >
+          <button onClick={onClose} className="text-zinc-500 hover:text-white">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -139,8 +152,25 @@ function AddAgentModal({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="e.g. diego@bridgeway.ph"
+          type="email"
+          className="w-full rounded-lg bg-zinc-950 border border-white/10 px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60 mb-4"
+        />
+        <label className="block text-xs text-zinc-500 mb-1.5">
+          Password
+          <span className="text-zinc-600 ml-1">(min. 6 characters)</span>
+        </label>
+        <input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Temporary password"
+          type="password"
           className="w-full rounded-lg bg-zinc-950 border border-white/10 px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60 mb-5"
         />
+        {error && (
+          <p className="text-red-400 text-xs bg-red-700/10 border border-red-700/30 rounded-lg px-3 py-2 mb-4">
+            {error}
+          </p>
+        )}
         <div className="flex gap-3">
           <button
             onClick={onClose}
@@ -149,12 +179,90 @@ function AddAgentModal({
             Cancel
           </button>
           <button
-            onClick={() => {
-              if (name.trim() && email.trim()) onAdd(name.trim(), email.trim());
-            }}
-            className="flex-1 py-2.5 rounded-lg bg-red-700 text-white text-sm font-medium hover:bg-red-600 transition-colors"
+            onClick={handleSubmit}
+            disabled={
+              loading ||
+              !name.trim() ||
+              !email.trim() ||
+              !password.trim()
+            }
+            className="flex-1 py-2.5 rounded-lg bg-red-700 text-white text-sm font-medium hover:bg-red-600 transition-colors disabled:bg-red-700/40 disabled:cursor-not-allowed"
           >
-            Add Agent
+            {loading ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+            ) : (
+              "Add Agent"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditAgentModal({
+  agent,
+  onClose,
+  onSave,
+}: {
+  agent: AgentRow;
+  onClose: () => void;
+  onSave: (id: string, name: string) => Promise<void>;
+}) {
+  const [name, setName] = useState(agent.full_name);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSave() {
+    if (!name.trim()) return;
+    setLoading(true);
+    setError("");
+    try {
+      await onSave(agent.id, name.trim());
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to update agent.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 px-4">
+      <div className="w-full max-w-sm rounded-xl border border-white/10 bg-zinc-900 p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-white font-semibold">Edit Agent</h3>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <label className="block text-xs text-zinc-500 mb-1.5">Full Name</label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-lg bg-zinc-950 border border-white/10 px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60 mb-5"
+        />
+        {error && (
+          <p className="text-red-400 text-xs bg-red-700/10 border border-red-700/30 rounded-lg px-3 py-2 mb-4">
+            {error}
+          </p>
+        )}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg border border-white/10 text-zinc-400 text-sm hover:bg-white/5"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={loading || !name.trim()}
+            className="flex-1 py-2.5 rounded-lg bg-red-700 text-white text-sm font-medium hover:bg-red-600 transition-colors disabled:bg-red-700/40"
+          >
+            {loading ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+            ) : (
+              "Save"
+            )}
           </button>
         </div>
       </div>
@@ -163,50 +271,159 @@ function AddAgentModal({
 }
 
 export default function Agents() {
-  const [agents, setAgents] = useState(INITIAL_AGENTS);
+  const [agents, setAgents] = useState<AgentRow[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(true);
   const [query, setQuery] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [editAgent, setEditAgent] = useState<AgentRow | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  useEffect(() => {
+    fetchAgents();
+  }, []);
+
+  async function fetchAgents() {
+    setLoadingAgents(true);
+    const { data, error } = await supabase
+      .from("agents")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setAgents(data as AgentRow[]);
+    }
+    setLoadingAgents(false);
+  }
 
   const filtered = useMemo(
     () =>
-      agents.filter((a) =>
-        a.name.toLowerCase().includes(query.toLowerCase())
+      agents.filter(
+        (a) =>
+          a.full_name.toLowerCase().includes(query.toLowerCase()) ||
+          a.email.toLowerCase().includes(query.toLowerCase())
       ),
     [agents, query]
   );
 
-  function handleAction(action: string, agent: AgentRecord) {
-    if (action === "delete") {
-      setAgents((prev) => prev.filter((a) => a.id !== agent.id));
+  async function handleAction(action: string, agent: AgentRow) {
+    if (action === "edit") {
+      setEditAgent(agent);
     } else if (action === "toggle") {
+      // Soft deactivate/activate
+      const { error } = await supabase
+        .from("agents")
+        .update({ is_active: !agent.is_active })
+        .eq("id", agent.id);
+
+      if (error) {
+        showToast("Failed to update agent status.");
+        return;
+      }
       setAgents((prev) =>
         prev.map((a) =>
-          a.id === agent.id
-            ? { ...a, status: a.status === "Online" ? "Offline" : "Online" }
-            : a
+          a.id === agent.id ? { ...a, is_active: !a.is_active } : a
         )
       );
+      showToast(
+        agent.is_active ? "Agent deactivated." : "Agent activated."
+      );
+    } else if (action === "delete") {
+      // Soft delete: just deactivate. Historical sessions remain intact.
+      const { error } = await supabase
+        .from("agents")
+        .update({ is_active: false })
+        .eq("id", agent.id);
+
+      if (error) {
+        showToast("Failed to deactivate agent.");
+        return;
+      }
+      setAgents((prev) =>
+        prev.map((a) => (a.id === agent.id ? { ...a, is_active: false } : a))
+      );
+      showToast("Agent deactivated (historical sessions preserved).");
+    } else if (action === "view") {
+      showToast(`Agent: ${agent.full_name} — ${agent.email}`);
     }
   }
 
-  function handleAdd(name: string, email: string) {
-    const nextId = String(agents.length + 1).padStart(2, "0");
-    setAgents((prev) => [
-      ...prev,
-      { id: nextId, name, status: "Offline" as const, sessions: 0, email },
-    ]);
+  async function handleAdd(
+    name: string,
+    email: string,
+    password: string
+  ) {
+    // Step 1: Create the Supabase Auth user via admin API.
+    // NOTE: Creating users in Auth requires the service-role key.
+    // On the FREE TIER without a backend, the recommended approach is:
+    //   - Admin signs up the agent themselves via Auth signUp,
+    //   - Or use Supabase Dashboard → Auth → Users.
+    //
+    // Here we use signUp with emailConfirmation disabled (set in Supabase Auth settings).
+    // The agent will get an email to confirm if email confirmation is enabled.
+    const { data: authData, error: authError } =
+      await supabase.auth.signUp({ email, password });
+
+    if (authError || !authData.user) {
+      throw new Error(authError?.message || "Failed to create auth user.");
+    }
+
+    // Step 2: Insert into agents profile table
+    const { data: agentData, error: agentError } = await supabase
+      .from("agents")
+      .insert({
+        auth_user_id: authData.user.id,
+        email,
+        full_name: name,
+        is_active: true,
+        status: "offline",
+      })
+      .select()
+      .single<AgentRow>();
+
+    if (agentError) {
+      throw new Error(agentError.message);
+    }
+
+    setAgents((prev) => [agentData, ...prev]);
     setShowAdd(false);
+    showToast(`Agent "${name}" created successfully.`);
+  }
+
+  async function handleSaveEdit(id: string, name: string) {
+    const { error } = await supabase
+      .from("agents")
+      .update({ full_name: name })
+      .eq("id", id);
+
+    if (error) throw new Error(error.message);
+
+    setAgents((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, full_name: name } : a))
+    );
+    showToast("Agent updated.");
   }
 
   return (
     <div className="space-y-5">
+      {/* Toast */}
+      {toast && (
+        <div className="rounded-lg border border-white/10 bg-zinc-900 px-4 py-3 text-sm text-zinc-300">
+          {toast}
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search agent..."
+            placeholder="Search agent name or email..."
             className="w-full rounded-lg bg-zinc-900/60 border border-white/10 pl-9 pr-3 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60"
           />
         </div>
@@ -224,45 +441,64 @@ export default function Agents() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-zinc-500 text-xs uppercase tracking-wide">
-                <th className="px-5 py-3 font-medium">ID</th>
                 <th className="px-5 py-3 font-medium">Name</th>
                 <th className="px-5 py-3 font-medium">Email</th>
                 <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">Sessions</th>
+                <th className="px-5 py-3 font-medium">Active</th>
+                <th className="px-5 py-3 font-medium">Created</th>
                 <th className="px-5 py-3 font-medium text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((a) => (
-                <tr
-                  key={a.id}
-                  className="border-t border-white/5 hover:bg-white/[0.03]"
-                >
-                  <td className="px-5 py-3 text-zinc-500 font-mono text-xs">
-                    {a.id}
-                  </td>
-                  <td className="px-5 py-3 text-zinc-200 font-medium">
-                    {a.name}
-                  </td>
-                  <td className="px-5 py-3 text-zinc-400 text-xs">{a.email}</td>
-                  <td className="px-5 py-3">
-                    <StatusDot online={a.status === "Online"} />
-                  </td>
-                  <td className="px-5 py-3 text-zinc-400">{a.sessions}</td>
-                  <td className="px-5 py-3 text-right">
-                    <ActionMenu agent={a} onAction={handleAction} />
+              {loadingAgents ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-8 text-center">
+                    <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
                   </td>
                 </tr>
-              ))}
-              {filtered.length === 0 && (
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}
                     className="px-5 py-8 text-center text-zinc-600 text-sm"
                   >
-                    No agents match "{query}".
+                    {query ? `No agents match "${query}".` : "No agents yet."}
                   </td>
                 </tr>
+              ) : (
+                filtered.map((a) => (
+                  <tr
+                    key={a.id}
+                    className="border-t border-white/5 hover:bg-white/[0.03]"
+                  >
+                    <td className="px-5 py-3 text-zinc-200 font-medium">
+                      {a.full_name}
+                    </td>
+                    <td className="px-5 py-3 text-zinc-400 text-xs">
+                      {a.email}
+                    </td>
+                    <td className="px-5 py-3">
+                      <StatusDot online={a.status === "online"} />
+                    </td>
+                    <td className="px-5 py-3">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full border ${
+                          a.is_active
+                            ? "border-emerald-700/40 text-emerald-400 bg-emerald-700/10"
+                            : "border-zinc-700 text-zinc-500 bg-zinc-800/60"
+                        }`}
+                      >
+                        {a.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-zinc-500 text-xs">
+                      {new Date(a.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <ActionMenu agent={a} onAction={handleAction} />
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -270,7 +506,18 @@ export default function Agents() {
       </div>
 
       {showAdd && (
-        <AddAgentModal onClose={() => setShowAdd(false)} onAdd={handleAdd} />
+        <AddAgentModal
+          onClose={() => setShowAdd(false)}
+          onAdd={handleAdd}
+        />
+      )}
+
+      {editAgent && (
+        <EditAgentModal
+          agent={editAgent}
+          onClose={() => setEditAgent(null)}
+          onSave={handleSaveEdit}
+        />
       )}
     </div>
   );

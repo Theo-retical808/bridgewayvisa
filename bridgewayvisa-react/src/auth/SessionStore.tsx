@@ -1,173 +1,288 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { ChatSession, SessionMessage, SessionStatus } from "../auth/types";
+/**
+ * SessionStore — Supabase-backed realtime session management.
+ *
+ * Replaces the in-memory store. All state is read from Supabase and
+ * kept in sync via Supabase Realtime subscriptions.
+ */
+
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
+import { supabase } from "../lib/supabase";
+import { DbChatSession, DbMessage } from "../lib/database.types";
+import { ChatSession, SessionMessage, SessionStatus } from "./types";
+import { RealtimeChannel } from "@supabase/supabase-js";
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function dbStatusToApp(s: DbChatSession["status"]): SessionStatus {
+  switch (s) {
+    case "waiting": return "WAITING";
+    case "active":  return "ACTIVE";
+    case "ended":   return "ENDED";
+    default:        return "WAITING";
+  }
+}
+
+function dbToApp(row: DbChatSession): ChatSession {
+  return {
+    id: row.id,
+    session_id: row.session_id,
+    client: {
+      name: row.client_name,
+      email: row.client_email,
+      contact: row.client_contact,
+      address: row.client_address,
+    },
+    service: row.service_question,
+    status: dbStatusToApp(row.status),
+    agentId: row.assigned_agent_id ?? undefined,
+    messages: (row.messages || []).map((m: DbMessage) => ({
+      id: m.id,
+      sender: m.sender_type,
+      sender_id: m.sender_id,
+      text: m.message,
+      time: new Date(m.created_at).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      }),
+    })),
+    createdAt: new Date(row.created_at).toLocaleString(),
+    acceptedAt: row.updated_at
+      ? new Date(row.updated_at).toLocaleString()
+      : undefined,
+    endedAt: row.ended_at
+      ? new Date(row.ended_at).toLocaleString()
+      : undefined,
+  };
+}
+
+function generateSessionCode(): string {
+  const num = Math.floor(10000 + Math.random() * 90000);
+  return `CHAT-${num}`;
+}
+
+// ─── Context ─────────────────────────────────────────────────────────────────
 
 interface SessionStore {
   sessions: ChatSession[];
+  loadingSessions: boolean;
   createSession: (
     client: ChatSession["client"],
-    service: string
-  ) => ChatSession;
-  acceptSession: (sessionId: string, agentId: string, agentName: string) => void;
-  addMessage: (sessionId: string, message: Omit<SessionMessage, "id">) => void;
-  endSession: (sessionId: string) => void;
-  setAskAdmin: (sessionId: string, question: string) => void;
-  answerAskAdmin: (sessionId: string, answer: string) => void;
+    service: string,
+    termsAcceptedAt: string
+  ) => Promise<{ session: ChatSession | null; error: string | null }>;
+  addMessage: (
+    sessionDbId: string,
+    message: Omit<SessionMessage, "id">
+  ) => Promise<void>;
+  endSession: (sessionDbId: string) => Promise<void>;
+  setAskAdmin: (sessionDbId: string, question: string) => void;
+  answerAskAdmin: (sessionDbId: string, answer: string) => void;
   getWaitingSessions: () => ChatSession[];
   getActiveSessions: () => ChatSession[];
   getCompletedSessions: () => ChatSession[];
   getAgentActiveSession: (agentId: string) => ChatSession | null;
   getAgentSessions: (agentId: string) => ChatSession[];
+  refreshSessions: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionStore | null>(null);
 
-function generateId(): string {
-  const num = Math.floor(10000 + Math.random() * 90000);
-  return `CHAT-${num}`;
-}
-
-function timeNow(): string {
-  return new Date().toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
+// ─── Provider ────────────────────────────────────────────────────────────────
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  // Local-only askAdmin state (not persisted to DB in this iteration)
+  const [askAdminMap, setAskAdminMap] = useState<
+    Record<string, { question: string; answer?: string; pending: boolean }>
+  >({});
+
+  const loadSessions = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("chat_sessions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setSessions((data as DbChatSession[]).map(dbToApp));
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadSessions();
+
+    // Subscribe to all changes on chat_sessions via Realtime
+    const channel: RealtimeChannel = supabase
+      .channel("chat_sessions_all")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_sessions" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const newRow = payload.new as DbChatSession;
+            setSessions((prev) => [dbToApp(newRow), ...prev]);
+          } else if (payload.eventType === "UPDATE") {
+            const updated = payload.new as DbChatSession;
+            setSessions((prev) =>
+              prev.map((s) => (s.id === updated.id ? dbToApp(updated) : s))
+            );
+          } else if (payload.eventType === "DELETE") {
+            const deleted = payload.old as { id: string };
+            setSessions((prev) => prev.filter((s) => s.id !== deleted.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadSessions]);
+
+  // Merge askAdmin local state into sessions
+  const sessionsWithAskAdmin = sessions.map((s) => ({
+    ...s,
+    askAdmin: askAdminMap[s.id],
+  }));
+
+  // ─── Actions ───────────────────────────────────────────────────────────────
 
   const createSession = useCallback(
-    (client: ChatSession["client"], service: string): ChatSession => {
-      const id = generateId();
-      const session: ChatSession = {
-        id,
-        client,
-        service,
-        status: "WAITING",
-        messages: [],
-        createdAt: timeNow(),
-      };
-      setSessions((prev) => [session, ...prev]);
-      return session;
-    },
-    []
-  );
+    async (
+      client: ChatSession["client"],
+      service: string,
+      termsAcceptedAt: string
+    ): Promise<{ session: ChatSession | null; error: string | null }> => {
+      const sessionCode = generateSessionCode();
 
-  const acceptSession = useCallback(
-    (sessionId: string, agentId: string, agentName: string) => {
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === sessionId
-            ? {
-                ...s,
-                status: "ASSIGNED" as SessionStatus,
-                agentId,
-                agentName,
-              }
-            : s
-        )
-      );
-      setTimeout(() => {
-        setSessions((prev) =>
-          prev.map((s) =>
-            s.id === sessionId
-              ? { ...s, status: "ACTIVE" as SessionStatus, acceptedAt: timeNow() }
-              : s
-          )
-        );
-      }, 300);
+      const { data, error } = await supabase
+        .from("chat_sessions")
+        .insert({
+          session_id: sessionCode,
+          client_name: client.name,
+          client_contact: client.contact,
+          client_email: client.email,
+          client_address: client.address,
+          service_question: service,
+          terms_accepted: true,
+          terms_accepted_at: termsAcceptedAt,
+          status: "waiting",
+          messages: [],
+        })
+        .select()
+        .single<DbChatSession>();
+
+      if (error) {
+        return { session: null, error: error.message };
+      }
+
+      const appSession = dbToApp(data);
+      return { session: appSession, error: null };
     },
     []
   );
 
   const addMessage = useCallback(
-    (sessionId: string, message: Omit<SessionMessage, "id">) => {
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === sessionId
-            ? {
-                ...s,
-                messages: [
-                  ...s.messages,
-                  { ...message, id: s.messages.length + 1 },
-                ],
-              }
-            : s
-        )
-      );
+    async (sessionDbId: string, msg: Omit<SessionMessage, "id">) => {
+      // Fetch current messages first to append safely
+      const { data: current } = await supabase
+        .from("chat_sessions")
+        .select("messages")
+        .eq("id", sessionDbId)
+        .single<{ messages: DbMessage[] }>();
+
+      const existing: DbMessage[] = current?.messages || [];
+      const newMsg: DbMessage = {
+        id: crypto.randomUUID(),
+        sender_type: msg.sender,
+        sender_id: msg.sender_id ?? null,
+        message: msg.text,
+        created_at: new Date().toISOString(),
+      };
+
+      await supabase
+        .from("chat_sessions")
+        .update({ messages: [...existing, newMsg] })
+        .eq("id", sessionDbId);
     },
     []
   );
 
-  const endSession = useCallback((sessionId: string) => {
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === sessionId
-          ? { ...s, status: "COMPLETED" as SessionStatus, endedAt: timeNow() }
-          : s
-      )
-    );
+  const endSession = useCallback(async (sessionDbId: string) => {
+    await supabase
+      .from("chat_sessions")
+      .update({
+        status: "ended",
+        ended_at: new Date().toISOString(),
+      })
+      .eq("id", sessionDbId);
   }, []);
 
-  const setAskAdmin = useCallback((sessionId: string, question: string) => {
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === sessionId
-          ? {
-              ...s,
-              askAdmin: { question, pending: true },
-            }
-          : s
-      )
-    );
+  // Ask admin is kept local (not stored in DB) — can be extended later
+  const setAskAdmin = useCallback((sessionDbId: string, question: string) => {
+    setAskAdminMap((prev) => ({
+      ...prev,
+      [sessionDbId]: { question, pending: true },
+    }));
   }, []);
 
-  const answerAskAdmin = useCallback((sessionId: string, answer: string) => {
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === sessionId && s.askAdmin
-          ? {
-              ...s,
-              askAdmin: { ...s.askAdmin, answer, pending: false },
-            }
-          : s
-      )
-    );
+  const answerAskAdmin = useCallback((sessionDbId: string, answer: string) => {
+    setAskAdminMap((prev) => ({
+      ...prev,
+      [sessionDbId]: {
+        ...(prev[sessionDbId] || { question: "" }),
+        answer,
+        pending: false,
+      },
+    }));
   }, []);
+
+  // ─── Selectors ─────────────────────────────────────────────────────────────
 
   const getWaitingSessions = useCallback(
-    () => sessions.filter((s) => s.status === "WAITING"),
-    [sessions]
+    () => sessionsWithAskAdmin.filter((s) => s.status === "WAITING"),
+    [sessionsWithAskAdmin]
   );
 
   const getActiveSessions = useCallback(
-    () => sessions.filter((s) => s.status === "ACTIVE"),
-    [sessions]
+    () => sessionsWithAskAdmin.filter((s) => s.status === "ACTIVE"),
+    [sessionsWithAskAdmin]
   );
 
   const getCompletedSessions = useCallback(
-    () => sessions.filter((s) => s.status === "COMPLETED"),
-    [sessions]
+    () => sessionsWithAskAdmin.filter((s) => s.status === "ENDED"),
+    [sessionsWithAskAdmin]
   );
 
   const getAgentActiveSession = useCallback(
     (agentId: string): ChatSession | null =>
-      sessions.find((s) => s.agentId === agentId && s.status === "ACTIVE") ??
-      null,
-    [sessions]
+      sessionsWithAskAdmin.find(
+        (s) => s.agentId === agentId && s.status === "ACTIVE"
+      ) ?? null,
+    [sessionsWithAskAdmin]
   );
 
   const getAgentSessions = useCallback(
-    (agentId: string) => sessions.filter((s) => s.agentId === agentId),
-    [sessions]
+    (agentId: string) =>
+      sessionsWithAskAdmin.filter((s) => s.agentId === agentId),
+    [sessionsWithAskAdmin]
   );
 
   return (
     <SessionContext.Provider
       value={{
-        sessions,
+        sessions: sessionsWithAskAdmin,
+        loadingSessions: loading,
         createSession,
-        acceptSession,
         addMessage,
         endSession,
         setAskAdmin,
@@ -177,6 +292,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         getCompletedSessions,
         getAgentActiveSession,
         getAgentSessions,
+        refreshSessions: loadSessions,
       }}
     >
       {children}

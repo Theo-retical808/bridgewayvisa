@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function AdminSidebar({ current, onNavigate }: Props) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   return (
     <aside className="hidden lg:flex lg:flex-col w-64 shrink-0 bg-zinc-950 border-r border-white/10 h-screen sticky top-0">
@@ -68,7 +68,7 @@ export default function AdminSidebar({ current, onNavigate }: Props) {
           <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center">
             <User className="w-3.5 h-3.5 text-zinc-400" />
           </div>
-          Admin
+          {user?.fullName || "Admin"}
         </div>
         <button
           onClick={logout}

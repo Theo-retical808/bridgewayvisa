@@ -1,30 +1,33 @@
+import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { authenticate } from "../auth/credentials";
 import LoginLayout from "../components/LoginLayout";
-import { useState } from "react";
 
 export default function AgentLogin() {
-  const { user, login, isAuthenticated } = useAuth();
+  const { user, login, isAuthenticated, loading } = useAuth();
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  if (isAuthenticated && user) {
+  // Already logged in — redirect
+  if (!loading && isAuthenticated && user) {
     if (user.role === "agent") return <Navigate to="/agent/dashboard" replace />;
     return <Navigate to={`/${user.role}/dashboard`} replace />;
   }
 
-  function handleLogin(username: string, password: string) {
+  async function handleLogin(email: string, password: string) {
     setError("");
-    const result = authenticate(username, password);
-    if (!result) {
-      setError("Invalid username or password.");
+    setSubmitting(true);
+    const result = await login(email, password);
+    setSubmitting(false);
+
+    if (result.error) {
+      setError(result.error);
       return;
     }
-    if (result.role !== "agent") {
+
+    if (user && user.role !== "agent") {
       setError("This account does not have agent access.");
-      return;
     }
-    login(result);
   }
 
   return (
@@ -33,6 +36,7 @@ export default function AgentLogin() {
       subtitle="Sign in to the agent dashboard"
       onLogin={handleLogin}
       error={error}
+      loading={submitting}
     />
   );
 }

@@ -4,8 +4,9 @@ import { Eye, EyeOff, LogIn } from "lucide-react";
 interface LoginLayoutProps {
   title: string;
   subtitle: string;
-  onLogin: (username: string, password: string) => void;
+  onLogin: (email: string, password: string) => void;
   error?: string;
+  loading?: boolean;
 }
 
 export default function LoginLayout({
@@ -13,20 +14,16 @@ export default function LoginLayout({
   subtitle,
   onLogin,
   error,
+  loading = false,
 }: LoginLayoutProps) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) return;
-    setLoading(true);
-    setTimeout(() => {
-      onLogin(username.trim(), password);
-      setLoading(false);
-    }, 400);
+    if (!email.trim() || !password.trim()) return;
+    onLogin(email.trim(), password);
   }
 
   return (
@@ -48,15 +45,16 @@ export default function LoginLayout({
         >
           <div>
             <label className="block text-xs text-zinc-500 mb-1.5">
-              Username
+              Email
             </label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
               className="w-full rounded-lg bg-zinc-950 border border-white/10 px-3.5 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60 transition-colors"
               autoFocus
+              autoComplete="email"
             />
           </div>
 
@@ -71,6 +69,7 @@ export default function LoginLayout({
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
                 className="w-full rounded-lg bg-zinc-950 border border-white/10 px-3.5 py-2.5 pr-10 text-sm text-white placeholder-zinc-600 outline-none focus:border-red-700/60 transition-colors"
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -94,7 +93,7 @@ export default function LoginLayout({
 
           <button
             type="submit"
-            disabled={loading || !username.trim() || !password.trim()}
+            disabled={loading || !email.trim() || !password.trim()}
             className="w-full flex items-center justify-center gap-2 rounded-lg bg-red-700 hover:bg-red-600 disabled:bg-red-700/40 disabled:cursor-not-allowed transition-colors text-white text-sm font-medium px-4 py-2.5"
           >
             {loading ? (
