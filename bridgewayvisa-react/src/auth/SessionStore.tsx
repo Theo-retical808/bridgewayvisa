@@ -12,9 +12,10 @@ import {
   useEffect,
   useCallback,
   ReactNode,
+  useRef,
 } from "react";
 import { supabase } from "../lib/supabase";
-import { DbChatSession, DbMessage } from "../lib/database.types";
+import { DbChatSession, DbAgent, DbMessage } from "../lib/database.types";
 import { ChatSession, SessionMessage, SessionStatus } from "./types";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -29,7 +30,10 @@ function dbStatusToApp(s: DbChatSession["status"]): SessionStatus {
   }
 }
 
-function dbToApp(row: DbChatSession): ChatSession {
+function dbToApp(
+  row: DbChatSession,
+  agentMap: Record<string, string> = {}
+): ChatSession {
   return {
     id: row.id,
     session_id: row.session_id,
@@ -42,6 +46,10 @@ function dbToApp(row: DbChatSession): ChatSession {
     service: row.service_question,
     status: dbStatusToApp(row.status),
     agentId: row.assigned_agent_id ?? undefined,
+    // Resolve agent name from the lookup map
+    agentName: row.assigned_agent_id
+      ? agentMap[row.assigned_agent_id] ?? "Unknown Agent"
+      : undefined,
     messages: (row.messages || []).map((m: DbMessage) => ({
       id: m.id,
       sender: m.sender_type,
@@ -99,6 +107,9 @@ const SessionContext = createContext<SessionStore | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
+  // Agent id → full_name lookup, kept in a ref so realtime callbacks always
+  // have the latest copy without causing re-renders
+  const agentMapRef = useRef<Record<string, string>>({});
   // Local-only askAdmin state (not persisted to DB in this iteration)
   const [askAdminMap, setAskAdminMap] = useState<
     Record<string, { question: string; answer?: string; pending: boolean }>
@@ -106,13 +117,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
+
+    // Fetch agents first to build the id → name map
+    const { data: agentRows } = await supabase
+      .from("agents")
+      .select("id, full_name");
+
+    const map: Record<string, string> = {};
+    if (agentRows) {
+      (agentRows as Pick<DbAgent, "id" | "full_name">[]).forEach((a) => {
+        map[a.id] = a.full_name;
+      });
+    }
+    agentMapRef.current = map;
+
     const { data, error } = await supabase
       .from("chat_sessions")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setSessions((data as DbChatSession[]).map(dbToApp));
+      setSessions((data as DbChatSession[]).map((r) => dbToApp(r, map)));
     }
     setLoading(false);
   }, []);
@@ -129,11 +154,41 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         (payload) => {
           if (payload.eventType === "INSERT") {
             const newRow = payload.new as DbChatSession;
-            setSessions((prev) => [dbToApp(newRow), ...prev]);
+            setSessions((prev) => [dbToApp(newRow, agentMapRef.current), ...prev]);
           } else if (payload.eventType === "UPDATE") {
             const updated = payload.new as DbChatSession;
+            // If a new agent was just assigned, ensure their name is in the map.
+            // If not present yet, do a quick single-row fetch.
+            if (
+              updated.assigned_agent_id &&
+              !agentMapRef.current[updated.assigned_agent_id]
+            ) {
+              supabase
+                .from("agents")
+                .select("id, full_name")
+                .eq("id", updated.assigned_agent_id)
+                .single<Pick<DbAgent, "id" | "full_name">>()
+                .then(({ data }) => {
+                  if (data) {
+                    agentMapRef.current = {
+                      ...agentMapRef.current,
+                      [data.id]: data.full_name,
+                    };
+                    // Re-map this session now that we have the name
+                    setSessions((prev) =>
+                      prev.map((s) =>
+                        s.id === updated.id
+                          ? dbToApp(updated, agentMapRef.current)
+                          : s
+                      )
+                    );
+                  }
+                });
+            }
             setSessions((prev) =>
-              prev.map((s) => (s.id === updated.id ? dbToApp(updated) : s))
+              prev.map((s) =>
+                s.id === updated.id ? dbToApp(updated, agentMapRef.current) : s
+              )
             );
           } else if (payload.eventType === "DELETE") {
             const deleted = payload.old as { id: string };
