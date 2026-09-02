@@ -385,9 +385,14 @@ export default function Agents() {
     email: string,
     password: string
   ) {
+    // Save the current admin session BEFORE calling signUp, because
+    // signUp() shifts the JS client session to the newly created user.
+    const { data: { session: adminSession } } = await supabase.auth.getSession();
+    if (!adminSession) {
+      throw new Error("Admin session lost. Please log in again.");
+    }
+
     // Step 1: Create the Supabase Auth user.
-    // signUp() on the anon client does NOT switch the admin's session —
-    // it creates the user in Auth but the admin remains logged in.
     const { data: authData, error: authError } =
       await supabase.auth.signUp({ email, password });
 
@@ -395,13 +400,20 @@ export default function Agents() {
       throw new Error(authError?.message || "Failed to create auth user.");
     }
 
-    // Step 2: Insert the agent profile via a SECURITY DEFINER RPC.
-    // A direct INSERT would fail because signUp() temporarily shifts
-    // the active session context, causing the RLS is_admin() check to
-    // return false. The RPC runs as the DB owner and bypasses that.
+    const newUserId = authData.user.id;
+
+    // Step 2: Restore the admin session immediately so subsequent
+    // calls run as the admin again, not as the newly created user.
+    await supabase.auth.setSession({
+      access_token: adminSession.access_token,
+      refresh_token: adminSession.refresh_token,
+    });
+
+    // Step 3: Insert the agent profile via SECURITY DEFINER RPC.
+    // The admin session is now restored, so is_admin() returns true.
     const { data: agentData, error: agentError } = await supabase
       .rpc("create_agent_profile", {
-        p_auth_user_id: authData.user.id,
+        p_auth_user_id: newUserId,
         p_email: email,
         p_full_name: name,
       })

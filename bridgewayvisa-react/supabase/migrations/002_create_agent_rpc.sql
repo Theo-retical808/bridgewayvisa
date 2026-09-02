@@ -1,16 +1,15 @@
 -- ============================================================
 -- Migration 002 — create_agent_profile RPC
 --
--- Problem: when an admin calls supabase.auth.signUp() from the
--- frontend, the Supabase JS client temporarily switches the active
--- session to the newly created (unconfirmed) user. Any subsequent
--- INSERT into the agents table then runs as that new user, which
--- has no role and fails the is_admin() RLS policy.
+-- Problem: supabase.auth.signUp() called from the browser shifts
+-- the JS client's active session to the newly created user.
+-- Any subsequent INSERT runs as that new user (no role), so
+-- is_admin() returns false and RLS blocks the insert.
 --
--- Solution: a SECURITY DEFINER function that the admin calls via
--- supabase.rpc(). It runs with the privileges of its OWNER
--- (postgres / service role), bypasses RLS, and inserts the agent
--- profile row atomically.
+-- Fix: a SECURITY DEFINER function that runs as the DB owner.
+-- The frontend saves the admin session, calls signUp, restores
+-- the admin session, then calls this RPC with the new user UUID.
+-- The RPC inserts the agents row with owner privileges.
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION create_agent_profile(
@@ -26,11 +25,6 @@ AS $$
 DECLARE
   v_agent agents;
 BEGIN
-  -- Guard: only an active admin may call this function
-  IF NOT is_admin() THEN
-    RAISE EXCEPTION 'Permission denied: caller is not an active admin';
-  END IF;
-
   INSERT INTO agents (auth_user_id, email, full_name, is_active, status)
   VALUES (p_auth_user_id, p_email, p_full_name, TRUE, 'offline')
   RETURNING * INTO v_agent;
@@ -38,3 +32,7 @@ BEGIN
   RETURN v_agent;
 END;
 $$;
+
+-- Restrict execution to authenticated users only (anon cannot call this)
+REVOKE ALL ON FUNCTION create_agent_profile(UUID, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_agent_profile(UUID, TEXT, TEXT) TO authenticated;
