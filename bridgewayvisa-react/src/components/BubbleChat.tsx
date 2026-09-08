@@ -1,5 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, MessageCircle, CheckCircle2, Clock, Copy } from "lucide-react";
+import {
+  Send,
+  X,
+  MessageCircle,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import { useSessions } from "../auth/SessionStore";
 import { ChatSession } from "../auth/types";
 import { supabase } from "../lib/supabase";
@@ -9,13 +18,13 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Step =
-  | "bubble"      // chat is closed
-  | "preprompt"   // welcome + service question
-  | "info"        // name / contact / email / address
-  | "terms"       // accept T&C
-  | "waiting"     // session created, waiting for agent
-  | "chat"        // active conversation
-  | "ended";      // session ended
+  | "bubble" // chat is closed
+  | "preprompt" // welcome + service question
+  | "info" // name / contact / email / address
+  | "terms" // accept T&C
+  | "waiting" // session created, waiting for agent
+  | "chat" // active conversation
+  | "ended"; // session ended
 
 interface ClientForm {
   name: string;
@@ -32,8 +41,20 @@ interface LocalMessage {
   time: string;
 }
 
+const VISA_SERVICES = [
+  "TOURIST VISA",
+  "STUDENT VISA",
+  "DEPENDENT VISA / OPEN WORK PERMIT",
+  "POST GRADUATION WORK VISA",
+  "RESIDENCY & CITIZENSHIP",
+  "DIGITAL NOMAD VISA",
+] as const;
+
 function timeNow() {
-  return new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return new Date().toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -42,10 +63,14 @@ function ChatHeader({
   title,
   subtitle,
   onClose,
+  isExpanded,
+  onToggleExpand,
 }: {
   title: string;
   subtitle?: string;
   onClose: () => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }) {
   return (
     <div className="bg-red-700 text-white px-4 py-3.5 flex items-center justify-between shadow-md">
@@ -55,13 +80,26 @@ function ChatHeader({
           <p className="text-red-200 text-[11px] mt-0.5">{subtitle}</p>
         )}
       </div>
-      <button
-        onClick={onClose}
-        className="text-white hover:text-red-200 transition-colors p-0.5"
-        aria-label="Close chat"
-      >
-        <X className="w-4 h-4" />
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleExpand}
+          className="text-white hover:text-red-200 transition-colors p-0.5"
+          aria-label={isExpanded ? "Minimize chat" : "Expand chat"}
+        >
+          {isExpanded ? (
+            <Minimize2 className="w-4 h-4" />
+          ) : (
+            <Maximize2 className="w-4 h-4" />
+          )}
+        </button>
+        <button
+          onClick={onClose}
+          className="text-white hover:text-red-200 transition-colors p-0.5"
+          aria-label="Close chat"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -71,6 +109,9 @@ function ChatHeader({
 export default function BubbleChat() {
   const { createSession } = useSessions();
   const [step, setStep] = useState<Step>("bubble");
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedService, setSelectedService] = useState<string>("");
+  const [customDetails, setCustomDetails] = useState<string>("");
   const [form, setForm] = useState<ClientForm>({
     name: "",
     contact: "",
@@ -116,17 +157,13 @@ export default function BubbleChat() {
           // Agent joined — move from waiting to chat
           if (updated.status === "active" && step === "waiting") {
             setStep("chat");
-            setSession((prev) =>
-              prev ? { ...prev, status: "ACTIVE" } : prev
-            );
+            setSession((prev) => (prev ? { ...prev, status: "ACTIVE" } : prev));
           }
 
           // Session ended by agent
           if (updated.status === "ended") {
             setStep("ended");
-            setSession((prev) =>
-              prev ? { ...prev, status: "ENDED" } : prev
-            );
+            setSession((prev) => (prev ? { ...prev, status: "ENDED" } : prev));
           }
 
           // Sync messages (agent messages arrive here)
@@ -141,7 +178,7 @@ export default function BubbleChat() {
             }),
           }));
           setMessages(mapped);
-        }
+        },
       )
       .subscribe();
 
@@ -165,13 +202,15 @@ export default function BubbleChat() {
     }
     // Reset everything if they close before creating a session
     setStep("bubble");
+    setSelectedService("");
+    setCustomDetails("");
     setForm({ name: "", contact: "", email: "", address: "", service: "" });
     setTermsChecked(false);
     setError("");
   }
 
   function handleReopen() {
-    if (session && (step === "bubble")) {
+    if (session && step === "bubble") {
       // Re-open to the correct step based on session status
       if (session.status === "WAITING") setStep("waiting");
       else if (session.status === "ACTIVE") setStep("chat");
@@ -179,6 +218,10 @@ export default function BubbleChat() {
     } else {
       handleOpen();
     }
+  }
+
+  function toggleExpand() {
+    setIsExpanded((prev) => !prev);
   }
 
   async function handleStartSession() {
@@ -194,7 +237,7 @@ export default function BubbleChat() {
         address: form.address,
       },
       form.service,
-      new Date().toISOString()
+      new Date().toISOString(),
     );
 
     setSubmitting(false);
@@ -256,8 +299,13 @@ export default function BubbleChat() {
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-80 bg-neutral-900 rounded-2xl shadow-2xl border border-red-900/40 flex flex-col overflow-hidden max-h-[80vh]">
-
+        <div
+          className={`mb-4 bg-neutral-900 rounded-2xl shadow-2xl border border-red-900/40 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
+            isExpanded
+              ? "w-[calc(100vw-2rem)] sm:w-[600px] h-[80vh]"
+              : "w-80 max-h-[80vh]"
+          }`}
+        >
           {/* ── Step: Pre-prompt ── */}
           {step === "preprompt" && (
             <>
@@ -265,6 +313,8 @@ export default function BubbleChat() {
                 title="Chat with Us"
                 subtitle="Bridgeway Visa Support"
                 onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={toggleExpand}
               />
               <div className="flex-1 p-4 overflow-y-auto text-gray-200 text-sm space-y-4 bg-neutral-900">
                 <div className="bg-neutral-800 p-3 rounded-xl border border-neutral-700/50">
@@ -277,16 +327,44 @@ export default function BubbleChat() {
                   </p>
                 </div>
                 <div>
+                  <label className="block text-xs font-semibold text-red-400 uppercase tracking-wider mb-2">
+                    Services We Offer *
+                  </label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {VISA_SERVICES.map((srv) => {
+                      const isSelected = selectedService === srv;
+                      return (
+                        <button
+                          key={srv}
+                          type="button"
+                          onClick={() => setSelectedService(srv)}
+                          className={`w-full text-left px-3 py-2.5 rounded-lg border text-xs font-medium transition-all ${
+                            isSelected
+                              ? "bg-red-700/20 border-red-600 text-white"
+                              : "bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-750 hover:border-neutral-600"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>{srv}</span>
+                            {isSelected && (
+                              <span className="w-2 h-2 rounded-full bg-red-500" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
                   <label className="block text-xs text-neutral-400 mb-1.5">
-                    What service do you need help with? *
+                    Additional details or destination (optional)
                   </label>
                   <textarea
-                    value={form.service}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, service: e.target.value }))
-                    }
-                    placeholder="e.g. Student visa for Canada, tourist visa for Spain..."
-                    rows={3}
+                    value={customDetails}
+                    onChange={(e) => setCustomDetails(e.target.value)}
+                    placeholder="e.g. Target country, planned date, or specific questions..."
+                    rows={2}
                     className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-600 resize-none"
                   />
                 </div>
@@ -294,10 +372,14 @@ export default function BubbleChat() {
               <div className="p-3 bg-neutral-900 border-t border-neutral-800">
                 <button
                   onClick={() => {
-                    if (!form.service.trim()) return;
+                    if (!selectedService) return;
+                    const combinedService = customDetails.trim()
+                      ? `${selectedService} - ${customDetails.trim()}`
+                      : selectedService;
+                    setForm((f) => ({ ...f, service: combinedService }));
                     setStep("info");
                   }}
-                  disabled={!form.service.trim()}
+                  disabled={!selectedService}
                   className="w-full bg-red-700 hover:bg-red-600 disabled:bg-red-700/40 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
                 >
                   Continue
@@ -313,14 +395,36 @@ export default function BubbleChat() {
                 title="Your Information"
                 subtitle="We need a few details to assist you"
                 onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={toggleExpand}
               />
               <div className="flex-1 p-4 overflow-y-auto text-sm space-y-3 bg-neutral-900">
                 {(
                   [
-                    { key: "name", label: "Full Name", placeholder: "Juan dela Cruz", type: "text" },
-                    { key: "contact", label: "Contact Number", placeholder: "+63 9XX XXX XXXX", type: "tel" },
-                    { key: "email", label: "Email Address", placeholder: "juan@example.com", type: "email" },
-                    { key: "address", label: "Address", placeholder: "City, Province, Philippines", type: "text" },
+                    {
+                      key: "name",
+                      label: "Full Name",
+                      placeholder: "Juan dela Cruz",
+                      type: "text",
+                    },
+                    {
+                      key: "contact",
+                      label: "Contact Number",
+                      placeholder: "+63 9XX XXX XXXX",
+                      type: "tel",
+                    },
+                    {
+                      key: "email",
+                      label: "Email Address",
+                      placeholder: "juan@example.com",
+                      type: "email",
+                    },
+                    {
+                      key: "address",
+                      label: "Address",
+                      placeholder: "City, Province, Philippines",
+                      type: "text",
+                    },
                   ] as const
                 ).map(({ key, label, placeholder, type }) => (
                   <div key={key}>
@@ -370,6 +474,8 @@ export default function BubbleChat() {
                 title="Terms & Conditions"
                 subtitle="Please read before starting"
                 onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={toggleExpand}
               />
               <div className="flex-1 p-4 overflow-y-auto text-sm bg-neutral-900 space-y-4">
                 <div className="bg-neutral-800 rounded-lg p-3 text-xs text-neutral-400 leading-relaxed border border-neutral-700/50 max-h-40 overflow-y-auto">
@@ -438,6 +544,8 @@ export default function BubbleChat() {
                 title="Chat with Us"
                 subtitle="Bridgeway Visa Support"
                 onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={toggleExpand}
               />
               <div className="flex-1 p-4 flex flex-col items-center justify-center text-center space-y-5 bg-neutral-900">
                 <div className="w-12 h-12 rounded-full bg-red-700/15 border border-red-700/30 flex items-center justify-center">
@@ -486,11 +594,15 @@ export default function BubbleChat() {
                 title={`Session ${session.session_id ?? session.id}`}
                 subtitle="Connected to an agent"
                 onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={toggleExpand}
               />
               <div
                 ref={scrollRef}
                 className="flex-1 p-3 overflow-y-auto space-y-3 bg-neutral-900 min-h-0"
-                style={{ maxHeight: "300px" }}
+                style={{
+                  maxHeight: isExpanded ? "none" : "300px",
+                }}
               >
                 {messages.length === 0 && (
                   <div className="text-center py-6 text-neutral-600 text-xs">
@@ -548,6 +660,8 @@ export default function BubbleChat() {
                 title="Chat Ended"
                 subtitle={session.session_id ?? session.id}
                 onClose={handleClose}
+                isExpanded={isExpanded}
+                onToggleExpand={toggleExpand}
               />
               <div className="flex-1 p-4 flex flex-col items-center justify-center text-center space-y-4 bg-neutral-900">
                 <div className="w-12 h-12 rounded-full bg-emerald-700/15 border border-emerald-700/30 flex items-center justify-center">
@@ -578,6 +692,8 @@ export default function BubbleChat() {
                     setStep("preprompt");
                     setSession(null);
                     setMessages([]);
+                    setSelectedService("");
+                    setCustomDetails("");
                     setForm({
                       name: "",
                       contact: "",
@@ -599,7 +715,7 @@ export default function BubbleChat() {
 
       {/* Bubble Toggle Button */}
       <button
-        onClick={isOpen ? handleClose : (session ? handleReopen : handleOpen)}
+        onClick={isOpen ? handleClose : session ? handleReopen : handleOpen}
         className="w-14 h-14 bg-red-700 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none ring-2 ring-red-900/30 relative"
         aria-label="Toggle chat"
       >
