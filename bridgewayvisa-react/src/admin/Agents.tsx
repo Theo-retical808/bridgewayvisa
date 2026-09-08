@@ -385,14 +385,14 @@ export default function Agents() {
     email: string,
     password: string
   ) {
-    // Step 1: Create the Supabase Auth user via admin API.
-    // NOTE: Creating users in Auth requires the service-role key.
-    // On the FREE TIER without a backend, the recommended approach is:
-    //   - Admin signs up the agent themselves via Auth signUp,
-    //   - Or use Supabase Dashboard → Auth → Users.
-    //
-    // Here we use signUp with emailConfirmation disabled (set in Supabase Auth settings).
-    // The agent will get an email to confirm if email confirmation is enabled.
+    // Save the current admin session BEFORE calling signUp, because
+    // signUp() shifts the JS client session to the newly created user.
+    const { data: { session: adminSession } } = await supabase.auth.getSession();
+    if (!adminSession) {
+      throw new Error("Admin session lost. Please log in again.");
+    }
+
+    // Step 1: Create the Supabase Auth user.
     const { data: authData, error: authError } =
       await supabase.auth.signUp({ email, password });
 
@@ -400,21 +400,27 @@ export default function Agents() {
       throw new Error(authError?.message || "Failed to create auth user.");
     }
 
-    // Step 2: Insert into agents profile table
+    const newUserId = authData.user.id;
+
+    // Step 2: Restore the admin session immediately so subsequent
+    // calls run as the admin again, not as the newly created user.
+    await supabase.auth.setSession({
+      access_token: adminSession.access_token,
+      refresh_token: adminSession.refresh_token,
+    });
+
+    // Step 3: Insert the agent profile via SECURITY DEFINER RPC.
+    // The admin session is now restored, so is_admin() returns true.
     const { data: agentData, error: agentError } = await supabase
-      .from("agents")
-      .insert({
-        auth_user_id: authData.user.id,
-        email,
-        full_name: name,
-        is_active: true,
-        status: "offline",
+      .rpc("create_agent_profile", {
+        p_auth_user_id: newUserId,
+        p_email: email,
+        p_full_name: name,
       })
-      .select()
       .single<AgentRow>();
 
-    if (agentError) {
-      throw new Error(agentError.message);
+    if (agentError || !agentData) {
+      throw new Error(agentError?.message || "Failed to create agent profile.");
     }
 
     setAgents((prev) => [agentData, ...prev]);
