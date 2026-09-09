@@ -167,3 +167,233 @@ Also supported: `CANCELLED`, `TRANSFERRED` (for future use).
 The BubbleChat now provides a more structured support experience by allowing users to **select their visa service first**, provide optional details, and then continue to the client information and agent connection process.
 
 Users can also **expand the chat window** whenever they need more space to read or manage their conversation.
+
+# Agent Live Chat — Update Notes
+
+## Update: Fix Agent Active Chats Filtering
+
+**Date:** September 9, 2026
+**Area:** Agent Dashboard / Live Chat Session Management
+
+### Issue
+
+The **"Your Active Chats"** section on the Agent Dashboard was displaying active chat sessions that were accepted by **other agents**.
+
+This happened because the `getActiveSessions()` function in `SessionStore.tsx` returned **all sessions with an `ACTIVE` status**, without checking which agent the session was assigned to.
+
+### Previous Behavior
+
+The previous implementation filtered sessions only by status:
+
+```tsx
+const getActiveSessions = useCallback(
+  () => sessionsWithAskAdmin.filter((s) => s.status === "ACTIVE"),
+  [sessionsWithAskAdmin],
+);
+```
+
+Because there was no agent ID condition, every logged-in agent could see every active chat.
+
+### Fix
+
+`getActiveSessions()` was changed to receive the current agent's profile ID and filter by both:
+
+1. Session status must be `ACTIVE`
+2. Session must be assigned to the current agent
+
+```tsx
+const getActiveSessions = useCallback(
+  (agentId: string) =>
+    sessionsWithAskAdmin.filter(
+      (s) => s.status === "ACTIVE" && s.agentId === agentId,
+    ),
+  [sessionsWithAskAdmin],
+);
+```
+
+### AgentDashboard.tsx
+
+The dashboard now receives the current agent's ID:
+
+```tsx
+<AgentDashboard
+  onAccept={handleAccept}
+  onViewChat={() => setCurrent("chat")}
+  agentId={agentProfileId}
+/>
+```
+
+Inside `AgentDashboard.tsx`, active sessions are retrieved using that agent ID:
+
+```tsx
+const active = getActiveSessions(agentId);
+```
+
+This ensures that **"Your Active Chats" only contains chats assigned to the logged-in agent**.
+
+### AgentApp.tsx
+
+The `pendingAsks` calculation was also updated to use the current agent:
+
+```tsx
+const pendingAsks = getActiveSessions(agentProfileId).filter(
+  (s) => s.askAdmin?.pending,
+).length;
+```
+
+This prevents the Ask Admin count from including active chats belonging to other agents.
+
+---
+
+## Session Assignment Flow
+
+The intended flow is now:
+
+```text
+Client creates chat
+       ↓
+Chat status = WAITING
+       ↓
+Agent sees chat in Waiting Clients
+       ↓
+Agent clicks Accept
+       ↓
+claim_chat_session RPC
+       ↓
+Chat assigned to Agent A
+       ↓
+assigned_agent_id = Agent A's profile ID
+       ↓
+status = ACTIVE
+       ↓
+Agent A sees the chat
+       ↓
+Other agents do NOT see it in "Your Active Chats"
+```
+
+### Important Database Field
+
+The session assignment is based on:
+
+```text
+chat_sessions.assigned_agent_id
+```
+
+The application maps this database value to:
+
+```tsx
+ChatSession.agentId;
+```
+
+Therefore, the agent ID used by the dashboard must match the value stored in `assigned_agent_id`.
+
+---
+
+## Current Agent Identification
+
+The Agent application uses the agent's **database profile ID**:
+
+```tsx
+const agentProfileId = user?.profileId || "";
+```
+
+This is intentionally used instead of the authentication UUID because the `chat_sessions.assigned_agent_id` field references the agent's database profile.
+
+---
+
+## Files Updated
+
+### `src/auth/SessionStore.tsx`
+
+Updated:
+
+- `getActiveSessions` interface
+- `getActiveSessions` implementation
+- Active session filtering by `agentId`
+
+### `src/agent/AgentDashboard.tsx`
+
+Updated:
+
+- Added `agentId` prop
+- Retrieves active sessions using the current agent ID
+
+```tsx
+const active = getActiveSessions(agentId);
+```
+
+### `src/agent/AgentApp.tsx`
+
+Updated:
+
+- Passes `agentProfileId` to `AgentDashboard`
+- Uses `agentProfileId` when calculating pending Ask Admin sessions
+
+---
+
+## Expected Result
+
+### Agent A
+
+If Agent A accepts:
+
+```text
+Session #123
+assigned_agent_id = Agent A
+status = ACTIVE
+```
+
+Agent A sees:
+
+```text
+Your Active Chats
+
+Client A
+Session #123
+[Open Chat]
+```
+
+### Agent B
+
+Agent B should **not** see Session #123 under:
+
+```text
+Your Active Chats
+```
+
+Agent B should only see chats assigned to Agent B.
+
+---
+
+## Additional Verification
+
+The `handleAccept()` function uses the Supabase RPC:
+
+```tsx
+supabase.rpc("claim_chat_session", {
+  p_session_id: session.id,
+  p_agent_id: agentProfileId,
+});
+```
+
+The RPC should correctly:
+
+1. Find the waiting session
+2. Assign `assigned_agent_id`
+3. Change the session status to `active`
+4. Prevent another agent from claiming the same session
+
+The RPC should be verified separately to ensure it correctly updates:
+
+```text
+chat_sessions.assigned_agent_id
+chat_sessions.status
+```
+
+---
+
+## Status
+
+**Fixed:** Agent Active Chats are now filtered by the logged-in agent.
+
+**Pending Verification:** Confirm that the `claim_chat_session` Supabase RPC correctly saves the agent's profile ID into `assigned_agent_id`.

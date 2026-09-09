@@ -5,6 +5,7 @@ import { ChatSession } from "../auth/types";
 interface Props {
   onAccept: (session: ChatSession) => void;
   onViewChat: () => void;
+  agentId: string;
 }
 
 function WaitingClientCard({
@@ -25,7 +26,8 @@ function WaitingClientCard({
             {session.client.name}
           </p>
           <p className="text-zinc-500 text-xs mt-0.5">
-            Waiting &middot; Session {session.session_id ?? session.id} &middot; {session.service}
+            Waiting &middot; Session {session.session_id ?? session.id} &middot;{" "}
+            {session.service}
           </p>
         </div>
       </div>
@@ -48,10 +50,15 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-export default function AgentDashboard({ onAccept, onViewChat }: Props) {
+export default function AgentDashboard({
+  onAccept,
+  onViewChat,
+  agentId,
+}: Props) {
   const { getWaitingSessions, getActiveSessions } = useSessions();
+
   const waiting = getWaitingSessions();
-  const active = getActiveSessions();
+  const active = getActiveSessions(agentId);
 
   return (
     <div className="space-y-6">
@@ -80,11 +87,7 @@ export default function AgentDashboard({ onAccept, onViewChat }: Props) {
         ) : (
           <div className="space-y-3">
             {waiting.map((c) => (
-              <WaitingClientCard
-                key={c.id}
-                session={c}
-                onAccept={onAccept}
-              />
+              <WaitingClientCard key={c.id} session={c} onAccept={onAccept} />
             ))}
           </div>
         )}

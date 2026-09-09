@@ -23,16 +23,20 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 
 function dbStatusToApp(s: DbChatSession["status"]): SessionStatus {
   switch (s) {
-    case "waiting": return "WAITING";
-    case "active":  return "ACTIVE";
-    case "ended":   return "ENDED";
-    default:        return "WAITING";
+    case "waiting":
+      return "WAITING";
+    case "active":
+      return "ACTIVE";
+    case "ended":
+      return "ENDED";
+    default:
+      return "WAITING";
   }
 }
 
 function dbToApp(
   row: DbChatSession,
-  agentMap: Record<string, string> = {}
+  agentMap: Record<string, string> = {},
 ): ChatSession {
   return {
     id: row.id,
@@ -48,7 +52,7 @@ function dbToApp(
     agentId: row.assigned_agent_id ?? undefined,
     // Resolve agent name from the lookup map
     agentName: row.assigned_agent_id
-      ? agentMap[row.assigned_agent_id] ?? "Unknown Agent"
+      ? (agentMap[row.assigned_agent_id] ?? "Unknown Agent")
       : undefined,
     messages: (row.messages || []).map((m: DbMessage) => ({
       id: m.id,
@@ -64,9 +68,7 @@ function dbToApp(
     acceptedAt: row.updated_at
       ? new Date(row.updated_at).toLocaleString()
       : undefined,
-    endedAt: row.ended_at
-      ? new Date(row.ended_at).toLocaleString()
-      : undefined,
+    endedAt: row.ended_at ? new Date(row.ended_at).toLocaleString() : undefined,
   };
 }
 
@@ -83,17 +85,17 @@ interface SessionStore {
   createSession: (
     client: ChatSession["client"],
     service: string,
-    termsAcceptedAt: string
+    termsAcceptedAt: string,
   ) => Promise<{ session: ChatSession | null; error: string | null }>;
   addMessage: (
     sessionDbId: string,
-    message: Omit<SessionMessage, "id">
+    message: Omit<SessionMessage, "id">,
   ) => Promise<void>;
   endSession: (sessionDbId: string) => Promise<void>;
   setAskAdmin: (sessionDbId: string, question: string) => void;
   answerAskAdmin: (sessionDbId: string, answer: string) => void;
   getWaitingSessions: () => ChatSession[];
-  getActiveSessions: () => ChatSession[];
+  getActiveSessions: (agentId: string) => ChatSession[];
   getCompletedSessions: () => ChatSession[];
   getAgentActiveSession: (agentId: string) => ChatSession | null;
   getAgentSessions: (agentId: string) => ChatSession[];
@@ -154,7 +156,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         (payload) => {
           if (payload.eventType === "INSERT") {
             const newRow = payload.new as DbChatSession;
-            setSessions((prev) => [dbToApp(newRow, agentMapRef.current), ...prev]);
+            setSessions((prev) => [
+              dbToApp(newRow, agentMapRef.current),
+              ...prev,
+            ]);
           } else if (payload.eventType === "UPDATE") {
             const updated = payload.new as DbChatSession;
             // If a new agent was just assigned, ensure their name is in the map.
@@ -179,22 +184,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
                       prev.map((s) =>
                         s.id === updated.id
                           ? dbToApp(updated, agentMapRef.current)
-                          : s
-                      )
+                          : s,
+                      ),
                     );
                   }
                 });
             }
             setSessions((prev) =>
               prev.map((s) =>
-                s.id === updated.id ? dbToApp(updated, agentMapRef.current) : s
-              )
+                s.id === updated.id ? dbToApp(updated, agentMapRef.current) : s,
+              ),
             );
           } else if (payload.eventType === "DELETE") {
             const deleted = payload.old as { id: string };
             setSessions((prev) => prev.filter((s) => s.id !== deleted.id));
           }
-        }
+        },
       )
       .subscribe();
 
@@ -215,7 +220,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     async (
       client: ChatSession["client"],
       service: string,
-      termsAcceptedAt: string
+      termsAcceptedAt: string,
     ): Promise<{ session: ChatSession | null; error: string | null }> => {
       const sessionCode = generateSessionCode();
 
@@ -243,7 +248,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const appSession = dbToApp(data);
       return { session: appSession, error: null };
     },
-    []
+    [],
   );
 
   const addMessage = useCallback(
@@ -269,7 +274,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         .update({ messages: [...existing, newMsg] })
         .eq("id", sessionDbId);
     },
-    []
+    [],
   );
 
   const endSession = useCallback(async (sessionDbId: string) => {
@@ -305,31 +310,34 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const getWaitingSessions = useCallback(
     () => sessionsWithAskAdmin.filter((s) => s.status === "WAITING"),
-    [sessionsWithAskAdmin]
+    [sessionsWithAskAdmin],
   );
 
   const getActiveSessions = useCallback(
-    () => sessionsWithAskAdmin.filter((s) => s.status === "ACTIVE"),
-    [sessionsWithAskAdmin]
+    (agentId: string) =>
+      sessionsWithAskAdmin.filter(
+        (s) => s.status === "ACTIVE" && s.agentId === agentId,
+      ),
+    [sessionsWithAskAdmin],
   );
 
   const getCompletedSessions = useCallback(
     () => sessionsWithAskAdmin.filter((s) => s.status === "ENDED"),
-    [sessionsWithAskAdmin]
+    [sessionsWithAskAdmin],
   );
 
   const getAgentActiveSession = useCallback(
     (agentId: string): ChatSession | null =>
       sessionsWithAskAdmin.find(
-        (s) => s.agentId === agentId && s.status === "ACTIVE"
+        (s) => s.agentId === agentId && s.status === "ACTIVE",
       ) ?? null,
-    [sessionsWithAskAdmin]
+    [sessionsWithAskAdmin],
   );
 
   const getAgentSessions = useCallback(
     (agentId: string) =>
       sessionsWithAskAdmin.filter((s) => s.agentId === agentId),
-    [sessionsWithAskAdmin]
+    [sessionsWithAskAdmin],
   );
 
   return (

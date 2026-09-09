@@ -37,8 +37,8 @@ export default function AgentApp() {
   const waiting = getWaitingSessions();
   const activeChat = getAgentActiveSession(agentProfileId);
 
-  const pendingAsks = getActiveSessions().filter(
-    (s) => s.askAdmin?.pending
+  const pendingAsks = getActiveSessions(agentProfileId).filter(
+    (s) => s.askAdmin?.pending,
   ).length;
 
   async function handleAccept(session: ChatSession) {
@@ -57,9 +57,7 @@ export default function AgentApp() {
     }
 
     if (!claimed) {
-      setClaimError(
-        "This session was already claimed by another agent."
-      );
+      setClaimError("This session was already claimed by another agent.");
       // Refresh to get the latest state
       await refreshSessions();
       return;
@@ -117,6 +115,7 @@ export default function AgentApp() {
             <AgentDashboard
               onAccept={handleAccept}
               onViewChat={() => setCurrent("chat")}
+              agentId={agentProfileId}
             />
           )}
           {current === "queue" && (
@@ -131,11 +130,7 @@ export default function AgentApp() {
               ) : (
                 <div className="space-y-3">
                   {waiting.map((c) => (
-                    <QueueCard
-                      key={c.id}
-                      session={c}
-                      onAccept={handleAccept}
-                    />
+                    <QueueCard key={c.id} session={c} onAccept={handleAccept} />
                   ))}
                 </div>
               )}
