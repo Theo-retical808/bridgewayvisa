@@ -30,6 +30,19 @@ import paguioMarticio from "../../../assets/Testimonials/PAGUIO MARTICIO - POST 
 import reynaldoCuadra from "../../../assets/Testimonials/REYNALDO CUADRA - STUDENT VISA.webp";
 import rosieBejer from "../../../assets/Testimonials/ROSIE BEJER - US VISA.webp";
 import santiagoFamily from "../../../assets/Testimonials/SANTIAGO FAMILY - STUDENT VISA + 3 DEPENDENTS TO SPAIN.webp";
+import bernabeMantilla from "../../../assets/Testimonials/BERNABE MANTILLA.webp";
+import donitaRoseMorante from "../../../assets/Testimonials/DONITA ROSE MORANTE - TOURIST VISA.webp";
+import ereineMata from "../../../assets/Testimonials/EREINE MATA - TOURIST VISA EXTENSION.webp";
+import erlindaMantilla from "../../../assets/Testimonials/ERLINDA MANTILLA.webp";
+import ivanReySalazar from "../../../assets/Testimonials/IVAN REY SALAZAR - AUSTRALIA VISA.webp";
+import janeAphorador from "../../../assets/Testimonials/JANE APHORADOR - TOURIST VISA.webp";
+import johnPaulJalimao from "../../../assets/Testimonials/JOHN PAUL JALIMAO - UKRAINE VISA.webp";
+import kateDivineAbuan from "../../../assets/Testimonials/KATE DIVINE ABUAN - PRACTICAL NURSING.webp";
+import leanaJaneVirtucio from "../../../assets/Testimonials/LEANA JANE VIRTUCIO - ROMANIA TOURIST VISA.webp";
+import msNunez from "../../../assets/Testimonials/MS. NUNEZ - TURKEY VISA.webp";
+import nikolaiMarasigan from "../../../assets/Testimonials/NIKOLAI MARASIGAN - STUDENT VISA.webp";
+import virginiaEspilita from "../../../assets/Testimonials/VIRGINIA ESPILITA - TOURIST VISA TO UK.webp";
+import wilmaMorante from "../../../assets/Testimonials/WILMA MORANTE - TOURIST VISA.webp";
 
 const reviews = [
   {
@@ -156,6 +169,71 @@ const reviews = [
     image: santiagoFamily,
     name: "Santiago Family",
     description: "Student Visa + 3 Dependents to Spain",
+  },
+  {
+    image: bernabeMantilla,
+    name: "Bernabe Mantilla",
+    description: "Visa Approved",
+  },
+  {
+    image: donitaRoseMorante,
+    name: "Donita Rose Morante",
+    description: "Tourist Visa Approved",
+  },
+  {
+    image: ereineMata,
+    name: "Ereine Mata",
+    description: "Tourist Visa Extension Approved",
+  },
+  {
+    image: erlindaMantilla,
+    name: "Erlinda Mantilla",
+    description: "Visa Approved",
+  },
+  {
+    image: ivanReySalazar,
+    name: "Ivan Rey Salazar",
+    description: "Australia Visa Approved",
+  },
+  {
+    image: janeAphorador,
+    name: "Jane Aphorador",
+    description: "Tourist Visa Approved",
+  },
+  {
+    image: johnPaulJalimao,
+    name: "John Paul Jalimao",
+    description: "Ukraine Visa Approved",
+  },
+  {
+    image: kateDivineAbuan,
+    name: "Kate Divine Abuan",
+    description: "Practical Nursing Visa Approved",
+  },
+  {
+    image: leanaJaneVirtucio,
+    name: "Leana Jane Virtucio",
+    description: "Romania Tourist Visa Approved",
+  },
+  {
+    image: msNunez,
+    name: "Ms. Nunez",
+    description: "Turkey Visa Approved",
+  },
+  {
+    image: nikolaiMarasigan,
+    name: "Nikolai Marasigan",
+    description: "Student Visa Approved",
+  },
+  {
+    image: virginiaEspilita,
+    name: "Virginia Espilita",
+    description: "Tourist Visa to UK Approved",
+  },
+  {
+    image: wilmaMorante,
+    name: "Wilma Morante",
+    description: "Tourist Visa Approved",
   },
 ];
 

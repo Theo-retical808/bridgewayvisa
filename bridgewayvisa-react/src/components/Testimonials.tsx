@@ -39,6 +39,26 @@ const testimonialVideos = [
     description:
       "Custom description for your new international journey testimonial.",
   },
+  {
+    videoId: "DgHUhSUrimE",
+    title: "Client Success Story",
+    description: "Achieved visa approval with Bridgeway Visa guidance.",
+  },
+  {
+    videoId: "lUsGp17krJk",
+    title: "Visa Journey Testimonial",
+    description: "Successful migration journey shared by our client.",
+  },
+  {
+    videoId: "nG3X0Mb7pe4",
+    title: "International Study Success",
+    description: "Student visa approved for overseas education dreams.",
+  },
+  {
+    videoId: "7T0Mb9CyiCI",
+    title: "Work Visa Achievement",
+    description: "Secured work permit abroad through our services.",
+  },
 ];
 
 export default function Testimonials() {
