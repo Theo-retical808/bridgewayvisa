@@ -1,4 +1,4 @@
-import logo from "../../../assets/logo.ico";
+import logo from "../assets/logo.ico";
 export default function About() {
   return (
     <section

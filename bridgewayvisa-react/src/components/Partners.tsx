@@ -1,13 +1,13 @@
 import { useRef, useEffect } from "react";
-import skylineInternationalCollege from "../../../assets/ourPartners/skylineInternationalCollege.webp";
-import timesEducation from "../../../assets/ourPartners/timesEducation.webp";
-import goozingImmigration from "../../../assets/ourPartners/GoozingMigration.webp";
-import canberraCollege from "../../../assets/ourPartners/canberraCollegeOfManagement&Technology.webp";
-import adventus from "../../../assets/ourPartners/Adventus.io.webp";
-import internationalBusinessUniversity from "../../../assets/ourPartners/InternationalBusinessUniversity.webp";
-import geebee from "../../../assets/ourPartners/GEEBEE.webp";
-import trentGlobalCollege from "../../../assets/ourPartners/TRENT.webp";
-import flemingCollege from "../../../assets/ourPartners/FLEEMING.webp";
+import skylineInternationalCollege from "../assets/ourPartners/skylineInternationalCollege.webp";
+import timesEducation from "../assets/ourPartners/timesEducation.webp";
+import goozingImmigration from "../assets/ourPartners/GoozingMigration.webp";
+import canberraCollege from "../assets/ourPartners/canberraCollegeOfManagement&Technology.webp";
+import adventus from "../assets/ourPartners/Adventus.io.webp";
+import internationalBusinessUniversity from "../assets/ourPartners/InternationalBusinessUniversity.webp";
+import geebee from "../assets/ourPartners/GEEBEE.webp";
+import trentGlobalCollege from "../assets/ourPartners/TRENT.webp";
+import flemingCollege from "../assets/ourPartners/FLEEMING.webp";
 
 const partners = [
   {

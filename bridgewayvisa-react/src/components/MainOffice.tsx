@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import updatedMainOffice from "../../../assets/ourOffice/MainOffice/UPDATED MAIN OFFICE.webp";
-import outsideOffice from "../../../assets/ourOffice/MainOffice/outsideOfTheOffice.webp";
-import lobbyOffice from "../../../assets/ourOffice/MainOffice/lobbyOfOffice.webp";
+import updatedMainOffice from "../assets/ourOffice/MainOffice/UPDATED MAIN OFFICE.webp";
+import outsideOffice from "../assets/ourOffice/MainOffice/outsideOfTheOffice.webp";
+import lobbyOffice from "../assets/ourOffice/MainOffice/lobbyOfOffice.webp";
 
 const slides = [
   {

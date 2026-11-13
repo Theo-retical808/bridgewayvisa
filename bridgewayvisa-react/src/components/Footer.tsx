@@ -1,4 +1,4 @@
-import logo from "../../../assets/logo.ico";
+import logo from "../assets/logo.ico";
 export default function Footer() {
   return (
     <footer className="bg-zinc-950 text-zinc-400 py-16 border-t border-zinc-900">

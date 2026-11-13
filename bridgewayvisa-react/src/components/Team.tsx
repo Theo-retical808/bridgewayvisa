@@ -1,28 +1,28 @@
 import { useState } from "react";
-import justinePaulBautista from "../../../assets/Team/JUSTINE PAUL BAUTISTA - CHIEF EXECUTIVE OFFICER.webp";
-import neilAndreyAgaza from "../../../assets/Team/NEIL ANDREY AGAZA - CHIEF OPERATING OFFICER.webp";
+import justinePaulBautista from "../assets/Team/JUSTINE PAUL BAUTISTA - CHIEF EXECUTIVE OFFICER.webp";
+import neilAndreyAgaza from "../assets/Team/NEIL ANDREY AGAZA - CHIEF OPERATING OFFICER.webp";
 
-import nicoleGarcia from "../../../assets/Team/NICOLE GARCIA - HR OFFICER.webp";
-import marjorieLuminario from "../../../assets/Team/MARJORIE LUMINARIO - ACCOUNTING OFFICER.webp";
-import kristelJoyLo from "../../../assets/Team/KRISTEL JOY LO - RECRUITMENT SPECIALIST.webp";
-import patriciaIsabelleDeRojas from "../../../assets/Team/PATRICIA ISABELLE DE ROJAS - MARKETING SPECIALIST.webp";
+import nicoleGarcia from "../assets/Team/NICOLE GARCIA - HR OFFICER.webp";
+import marjorieLuminario from "../assets/Team/MARJORIE LUMINARIO - ACCOUNTING OFFICER.webp";
+import kristelJoyLo from "../assets/Team/KRISTEL JOY LO - RECRUITMENT SPECIALIST.webp";
+import patriciaIsabelleDeRojas from "../assets/Team/PATRICIA ISABELLE DE ROJAS - MARKETING SPECIALIST.webp";
 
-import keithAndrewPonce from "../../../assets/Team/KEITH ANDREW PONCE - VISA CASE OFFICER.webp";
+import keithAndrewPonce from "../assets/Team/KEITH ANDREW PONCE - VISA CASE OFFICER.webp";
 
-import erikaAlfornon from "../../../assets/Team/ERIKA ALFORNON - VISA CONSULTANT (TEAM ACCOUNTABILITY).webp";
-import melbeMaeNiez from "../../../assets/Team/MELBE MAE NIEZ -  VISA CONSULTANT (TEAM ACCOUNTABILITY).webp";
-import hannahArenza from "../../../assets/Team/HANNAH ARENZA - VISA SPECIALIST (TEAM ACCOUNTABILITY).webp";
-import kateYamoway from "../../../assets/Team/KATE YAMOWAY - VISA CONSULTANT (TEAM ACCOUNTABILITY).webp";
+import erikaAlfornon from "../assets/Team/ERIKA ALFORNON - VISA CONSULTANT (TEAM ACCOUNTABILITY).webp";
+import melbeMaeNiez from "../assets/Team/MELBE MAE NIEZ -  VISA CONSULTANT (TEAM ACCOUNTABILITY).webp";
+import hannahArenza from "../assets/Team/HANNAH ARENZA - VISA SPECIALIST (TEAM ACCOUNTABILITY).webp";
+import kateYamoway from "../assets/Team/KATE YAMOWAY - VISA CONSULTANT (TEAM ACCOUNTABILITY).webp";
 
-import biancaSantolorin from "../../../assets/Team/BIANCA SANTOLORIN - VISA CONSULTANT (TEAM EXCELLENCE).webp";
-import juliaMarieVentayen from "../../../assets/Team/JULIA MARIE VENTAYEN - VISA CONSULTANT (TEAM EXCELLENCE).webp";
-import kierstineCleoBernaldo from "../../../assets/Team/KIERSTINE CLEO BERNALDO - VISA CONSULTANT (TEAM EXCELLENCE).webp";
-import jemimahSelidio from "../../../assets/Team/JEMIMAH SELIDIO - VISA SPECIALIST (TEAM EXCELLENCE).webp";
+import biancaSantolorin from "../assets/Team/BIANCA SANTOLORIN - VISA CONSULTANT (TEAM EXCELLENCE).webp";
+import juliaMarieVentayen from "../assets/Team/JULIA MARIE VENTAYEN - VISA CONSULTANT (TEAM EXCELLENCE).webp";
+import kierstineCleoBernaldo from "../assets/Team/KIERSTINE CLEO BERNALDO - VISA CONSULTANT (TEAM EXCELLENCE).webp";
+import jemimahSelidio from "../assets/Team/JEMIMAH SELIDIO - VISA SPECIALIST (TEAM EXCELLENCE).webp";
 
-import daniellaTan from "../../../assets/Team/DANIELLA TAN - VISA CONSULTANT (TEAM INTEGRITY).webp";
-import jessicaBracia from "../../../assets/Team/JESSICA BRACIA - VISA CONSULTANT (TEAM INTEGRITY).webp";
-import jannileBaculi from "../../../assets/Team/JANNILE BACULI - VISA SPECIALIST (TEAM INTEGRITY).webp";
-import jasperBalgos from "../../../assets/Team/JASPER BALGOS - VISA CONSULTANT (TEAM INTEGRITY).webp";
+import daniellaTan from "../assets/Team/DANIELLA TAN - VISA CONSULTANT (TEAM INTEGRITY).webp";
+import jessicaBracia from "../assets/Team/JESSICA BRACIA - VISA CONSULTANT (TEAM INTEGRITY).webp";
+import jannileBaculi from "../assets/Team/JANNILE BACULI - VISA SPECIALIST (TEAM INTEGRITY).webp";
+import jasperBalgos from "../assets/Team/JASPER BALGOS - VISA CONSULTANT (TEAM INTEGRITY).webp";
 
 interface TeamMember {
   name: string;

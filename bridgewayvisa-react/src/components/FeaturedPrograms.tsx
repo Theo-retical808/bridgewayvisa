@@ -1,12 +1,12 @@
 import { useRef, useEffect } from "react";
-import continuingCareAssistant from "../../../assets/featuredPrograms/continuingCareAssisstant.jpg";
-import studyInGermany from "../../../assets/featuredPrograms/studyInGermany.jpg";
-import studyInAustralia from "../../../assets/featuredPrograms/studyInAustrillia.jpg";
-import newZealandResidency from "../../../assets/featuredPrograms/longtermResidencyPathwayNewZealand.jpg";
-import travelToSpain from "../../../assets/featuredPrograms/TravelToSpain.jpg";
-import skillsMigration from "../../../assets/featuredPrograms/generalSkillMigrantVisa.jpg";
-import studyInUK from "../../../assets/featuredPrograms/StudyInUnitedKingdom.jpg";
-import studyAbroad from "../../../assets/featuredPrograms/studyAbroad.jpg";
+import continuingCareAssistant from "../assets/featuredPrograms/continuingCareAssisstant.jpg";
+import studyInGermany from "../assets/featuredPrograms/studyInGermany.jpg";
+import studyInAustralia from "../assets/featuredPrograms/studyInAustrillia.jpg";
+import newZealandResidency from "../assets/featuredPrograms/longtermResidencyPathwayNewZealand.jpg";
+import travelToSpain from "../assets/featuredPrograms/TravelToSpain.jpg";
+import skillsMigration from "../assets/featuredPrograms/generalSkillMigrantVisa.jpg";
+import studyInUK from "../assets/featuredPrograms/StudyInUnitedKingdom.jpg";
+import studyAbroad from "../assets/featuredPrograms/studyAbroad.jpg";
 
 const programs = [
   {

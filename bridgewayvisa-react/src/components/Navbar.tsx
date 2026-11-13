@@ -1,5 +1,5 @@
 import { useState } from "react";
-import logo from "../../../assets/logo.ico";
+import logo from "../assets/logo.ico";
 
 const navLinks = [
   { href: "#about", label: "About" },

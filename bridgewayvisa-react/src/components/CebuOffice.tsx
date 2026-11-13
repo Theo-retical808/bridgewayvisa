@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import cebuBranchOffice from "../../../assets/ourOffice/Cebu/CEBU BRANCH OFFICE.webp";
-import cebuBranchOffice3 from "../../../assets/ourOffice/Cebu/CEBU BRANCH OFFICE (3).webp";
-import cebuBranchOffice2 from "../../../assets/ourOffice/Cebu/CEBU BRANCH OFFICE (2).png";
+import cebuBranchOffice from "../assets/ourOffice/Cebu/CEBU BRANCH OFFICE.webp";
+import cebuBranchOffice3 from "../assets/ourOffice/Cebu/CEBU BRANCH OFFICE (3).webp";
+import cebuBranchOffice2 from "../assets/ourOffice/Cebu/CEBU BRANCH OFFICE (2).png";
 
 const slides = [
   {

@@ -1,4 +1,4 @@
-import paymentChannel from "../../../assets/payment_channel.webp";
+import paymentChannel from "../assets/payment_channel.webp";
 
 export default function Payment() {
   return (
